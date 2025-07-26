@@ -53,55 +53,6 @@ interface JobApplication {
   subject: string;
 }
 
-// Mock data - in real app this would come from email parsing
-const mockApplications: JobApplication[] = [
-  {
-    id: "1",
-    company: "Google",
-    role: "Senior Software Engineer",
-    status: "interview",
-    email: "noreply@google.com",
-    date: new Date("2024-01-15"),
-    subject: "Thank you for your application - Next steps",
-  },
-  {
-    id: "2",
-    company: "Microsoft",
-    role: "Frontend Developer",
-    status: "applied",
-    email: "careers@microsoft.com",
-    date: new Date("2024-01-10"),
-    subject: "Application received - Frontend Developer",
-  },
-  {
-    id: "3",
-    company: "Meta",
-    role: "Full Stack Engineer",
-    status: "rejected",
-    email: "recruiting@meta.com",
-    date: new Date("2024-01-08"),
-    subject: "Update on your application",
-  },
-  {
-    id: "4",
-    company: "Apple",
-    role: "iOS Developer",
-    status: "next-phase",
-    email: "talent@apple.com",
-    date: new Date("2024-01-20"),
-    subject: "Moving forward with your application",
-  },
-  {
-    id: "5",
-    company: "Netflix",
-    role: "Backend Engineer",
-    status: "offer",
-    email: "jobs@netflix.com",
-    date: new Date("2024-01-25"),
-    subject: "Job offer - Backend Engineer position",
-  },
-];
-
 const statusColors = {
   applied: "bg-blue-100 text-blue-800",
   rejected: "bg-red-100 text-red-800",
@@ -112,10 +63,10 @@ const statusColors = {
 };
 
 export default function Dashboard() {
-  const [applications, setApplications] =
-    useState<JobApplication[]>(mockApplications);
-  const [filteredApplications, setFilteredApplications] =
-    useState<JobApplication[]>(mockApplications);
+  const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<
+    JobApplication[]
+  >([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [startDate, setStartDate] = useState<Date>();
@@ -128,7 +79,6 @@ export default function Dashboard() {
   useEffect(() => {
     let filtered = applications;
 
-    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(
         (app) =>
@@ -138,12 +88,10 @@ export default function Dashboard() {
       );
     }
 
-    // Status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter((app) => app.status === statusFilter);
     }
 
-    // Date filter
     if (startDate) {
       filtered = filtered.filter((app) => app.date >= startDate);
     }
@@ -156,7 +104,6 @@ export default function Dashboard() {
 
   const handleProcessEmails = async () => {
     if (!isGmailConnected) {
-      // Redirect to Gmail OAuth
       window.location.href = gmailAuthUrl;
       return;
     }
@@ -170,9 +117,20 @@ export default function Dashboard() {
       });
 
       const result = await response.json();
-      if (result.success) {
-        // Add new applications to the list
-        setApplications((prev) => [...prev, ...result.applications]);
+      if (result.success && Array.isArray(result.applications)) {
+        // Append new applications, avoiding duplicates by ID
+        setApplications((prev) => {
+          const existingIds = new Set(prev.map((app) => app.id));
+          const newApps = result.applications.filter(
+            (app: JobApplication) => !existingIds.has(app.id)
+          );
+          // Convert date strings to Date objects
+          const newAppsWithDateObjects = newApps.map((app: any) => ({
+            ...app,
+            date: new Date(app.date),
+          }));
+          return [...prev, ...newAppsWithDateObjects];
+        });
       }
     } catch (error) {
       console.error("Failed to process emails:", error);
@@ -193,7 +151,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // Check if user is already authenticated
+    // Check Gmail authentication status on mount
     const checkGmailAuth = async () => {
       try {
         const response = await fetch("/api/auth/status");
