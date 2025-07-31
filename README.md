@@ -6,6 +6,8 @@ An intelligent job application tracking system that automatically parses your Gm
 
 [**View Live App**](https://job-app-tracker-gmail.vercel.app)
 
+## ⚠️ Note: This app is currently in the testing phase and limited to 100 users due to Gmail API quota restrictions.
+
 ## ✨ Features
 
 ### 🤖 Automatic Email Processing
