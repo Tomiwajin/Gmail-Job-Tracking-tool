@@ -1,5 +1,7 @@
 "use client";
 
+import { ExportButton } from "@/components/export-button";
+
 import { useApplicationStore } from "@/lib/useApplicationStore";
 import { useState, useEffect } from "react";
 import {
@@ -178,6 +180,10 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex gap-2">
+          <ExportButton
+            applications={applications}
+            filteredApplications={filteredApplications}
+          />
           <Link href="/analytics">
             <Button variant="outline">
               <BarChart3 className="w-4 h-4 mr-2" />
