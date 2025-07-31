@@ -27,6 +27,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { TrendingUp, Users, MailX, Target } from "lucide-react";
 
 export default function Analytics() {
   const applications = useApplicationStore((state) => state.applications);
@@ -64,6 +65,10 @@ export default function Analytics() {
   ).toFixed(1);
   const offerRate = (
     ((statusCounts["offer"] || 0) / totalApplications) *
+    100
+  ).toFixed(1);
+  const rejectionRate = (
+    ((statusCounts["rejected"] || 0) / totalApplications) *
     100
   ).toFixed(1);
 
@@ -136,6 +141,51 @@ export default function Analytics() {
             Insights into your job application journey
           </p>
         </div>
+      </div>
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Applications
+            </CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalApplications}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Interview Rate
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{interviewRate}%</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Offer Rate</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{offerRate}%</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Rejection Rate
+            </CardTitle>
+            <MailX className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{rejectionRate}%</div>
+          </CardContent>
+        </Card>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Status Pie Chart */}

@@ -11,7 +11,7 @@ export async function GET() {
       isAuthenticated: !!accessToken?.value,
       email: userEmail?.value || null,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({
       isAuthenticated: false,
       email: null,

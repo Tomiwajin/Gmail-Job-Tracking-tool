@@ -9,6 +9,17 @@ export interface ExportData {
   lastUpdate?: string;
 }
 
+interface JobApplication {
+  company: string;
+  role: string;
+  status: string;
+  email: string;
+  date: Date | string;
+  subject: string;
+  appliedDate?: Date | string;
+  lastUpdate?: Date | string;
+}
+
 export class DataExporter {
   static convertToCSV(data: ExportData[]): string {
     if (data.length === 0) return "";
@@ -100,7 +111,7 @@ export class DataExporter {
     return csvRows.join("\n");
   }
 
-  static generateAnalyticsCSV(applications: any[], summary: any): string {
+  static generateAnalyticsCSV(applications: JobApplication[]): string {
     const headers = ["Metric", "Value", "Percentage"];
     const total = applications.length;
 
