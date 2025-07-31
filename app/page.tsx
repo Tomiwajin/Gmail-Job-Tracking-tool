@@ -110,6 +110,11 @@ export default function Dashboard() {
       return;
     }
 
+    if (!endDate) {
+      setFormError("Please select an end date before processing emails.");
+      return;
+    }
+
     setFormError(null); // clear error
 
     if (!isGmailConnected) {
