@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,9 +14,19 @@ import { DataExporter, type ExportData } from "@/lib/export-utils";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 
+interface JobApplication {
+  id: string;
+  company: string;
+  role: string;
+  status: string;
+  email: string;
+  date: Date | string;
+  subject: string;
+}
+
 interface ExportButtonProps {
-  applications: any[];
-  filteredApplications?: any[];
+  applications: JobApplication[];
+  filteredApplications?: JobApplication[];
   className?: string;
 }
 
@@ -27,7 +36,6 @@ export function ExportButton({
   className,
 }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
-
   const exportData = filteredApplications || applications;
 
   const handleDownloadSpreadsheet = async () => {
@@ -37,9 +45,7 @@ export function ExportButton({
         new Date(),
         "yyyy-MM-dd"
       )}.xlsx`;
-
       await SpreadsheetExporter.downloadTrueExcelFile(exportData, filename);
-
       toast({
         title: "Spreadsheet Downloaded!",
         description: `Downloaded ${exportData.length} applications as Excel file`,
@@ -61,7 +67,6 @@ export function ExportButton({
     try {
       const filename = `job-analytics-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
       SpreadsheetExporter.downloadAnalyticsSpreadsheet(exportData, filename);
-
       toast({
         title: "Analytics Spreadsheet Downloaded!",
         description: `Downloaded comprehensive analytics with ${exportData.length} applications`,
@@ -83,7 +88,7 @@ export function ExportButton({
     try {
       const exportData: ExportData[] = (
         filteredApplications || applications
-      ).map((app) => ({
+      ).map((app: JobApplication) => ({
         company: app.company,
         role: app.role,
         status: app.status,
@@ -100,7 +105,6 @@ export function ExportButton({
         "yyyy-MM-dd"
       )}.csv`;
       DataExporter.downloadCSV(csvContent, filename);
-
       toast({
         title: "CSV Downloaded!",
         description: `Downloaded ${exportData.length} applications as CSV file`,

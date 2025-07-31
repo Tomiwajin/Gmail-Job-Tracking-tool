@@ -12,8 +12,20 @@ export interface SpreadsheetData {
   notes?: string;
 }
 
+interface JobApplication {
+  company: string;
+  role: string;
+  status: string;
+  email: string;
+  date: Date | string;
+  subject: string;
+  appliedDate?: Date | string;
+  lastUpdate?: Date | string;
+  notes?: string;
+}
+
 export class SpreadsheetExporter {
-  static generateWorkbookData(applications: any[]): {
+  static generateWorkbookData(applications: JobApplication[]): {
     headers: string[];
     data: string[][];
   } {
@@ -47,7 +59,7 @@ export class SpreadsheetExporter {
     return { headers, data: [headers, ...data] };
   }
 
-  static generateAnalyticsWorkbook(applications: any[]) {
+  static generateAnalyticsWorkbook(applications: JobApplication[]) {
     const total = applications.length;
     const statusCounts = applications.reduce((acc, app) => {
       acc[app.status] = (acc[app.status] || 0) + 1;
@@ -94,14 +106,14 @@ export class SpreadsheetExporter {
   }
 
   static async downloadTrueExcelFile(
-    applications: any[],
+    applications: JobApplication[],
     filename = "job-applications.xlsx"
   ): Promise<void> {
     try {
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Job Applications");
+      const { data } = this.generateWorkbookData(applications);
 
-      const { headers, data } = this.generateWorkbookData(applications);
       worksheet.addRows(data);
 
       // Apply bold style to header row
@@ -115,7 +127,7 @@ export class SpreadsheetExporter {
   }
 
   static async downloadAnalyticsSpreadsheet(
-    applications: any[],
+    applications: JobApplication[],
     filename = "job-analytics.xlsx"
   ): Promise<void> {
     try {
@@ -149,15 +161,12 @@ export class SpreadsheetExporter {
   private static triggerDownload(blob: Blob, filename: string) {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-
     link.href = url;
     link.download = filename;
     link.style.visibility = "hidden";
-
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
     URL.revokeObjectURL(url);
   }
 }

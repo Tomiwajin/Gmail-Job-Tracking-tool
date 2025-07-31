@@ -1,7 +1,5 @@
 "use client";
-
 import { ExportButton } from "@/components/export-button";
-
 import { useApplicationStore } from "@/lib/useApplicationStore";
 import { useState, useEffect } from "react";
 import {
@@ -56,6 +54,16 @@ interface JobApplication {
   subject: string;
 }
 
+interface ProcessedApplication {
+  id: string;
+  company: string;
+  role: string;
+  status: string;
+  email: string;
+  date: string;
+  subject: string;
+}
+
 const statusColors = {
   applied: "bg-blue-100 text-blue-800",
   rejected: "bg-red-100 text-red-800",
@@ -83,7 +91,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     let filtered = applications;
-
     if (searchTerm) {
       filtered = filtered.filter(
         (app) =>
@@ -92,18 +99,15 @@ export default function Dashboard() {
           app.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     if (statusFilter !== "all") {
       filtered = filtered.filter((app) => app.status === statusFilter);
     }
-
     if (startDate) {
       filtered = filtered.filter((app) => app.date >= startDate);
     }
     if (endDate) {
       filtered = filtered.filter((app) => app.date <= endDate);
     }
-
     setFilteredApplications(filtered);
   }, [applications, searchTerm, statusFilter, startDate, endDate]);
 
@@ -112,14 +116,11 @@ export default function Dashboard() {
       setFormError("Please select a valid start and end date.");
       return;
     }
-
     setFormError(null);
-
     if (!isGmailConnected) {
       window.location.href = gmailAuthUrl;
       return;
     }
-
     setIsProcessing(true);
     try {
       const response = await fetch("/api/process-emails", {
@@ -127,13 +128,14 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ startDate, endDate }),
       });
-
       const result = await response.json();
       if (result.success && Array.isArray(result.applications)) {
-        const newAppsWithDateObjects = result.applications.map((app: any) => ({
-          ...app,
-          date: new Date(app.date),
-        }));
+        const newAppsWithDateObjects = result.applications.map(
+          (app: ProcessedApplication) => ({
+            ...app,
+            date: new Date(app.date),
+          })
+        );
         addApplications(newAppsWithDateObjects);
       }
     } catch (error) {
@@ -165,7 +167,6 @@ export default function Dashboard() {
         console.error("Failed to check auth status:", error);
       }
     };
-
     checkGmailAuth();
   }, []);
 
@@ -212,7 +213,6 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Email Processing Settings</CardTitle>
@@ -272,7 +272,6 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
-
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -311,7 +310,6 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
-
       {/* Applications Table */}
       <Card>
         <CardHeader>

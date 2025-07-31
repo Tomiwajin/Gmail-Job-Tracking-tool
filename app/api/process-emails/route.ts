@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { google } from "googleapis";
+import { google, gmail_v1 } from "googleapis";
 import { cookies } from "next/headers";
 
 interface GmailMessage {
@@ -119,7 +119,7 @@ function extractJobData(emailContent: string) {
       /job alert/gi,
       /job board/gi,
       /Glassdoor Community/gi,
-      /you’re signed up to/gi,
+      /you're signed up to/gi,
       /Getting Application Ready/gi,
     ];
 
@@ -153,6 +153,7 @@ function extractJobData(emailContent: string) {
     status,
   };
 }
+
 export async function POST(request: NextRequest) {
   try {
     const { startDate, endDate } = await request.json();
@@ -195,19 +196,21 @@ export async function POST(request: NextRequest) {
       new Date(startDate).getTime() / 1000
     )} before:${Math.floor(new Date(endDate).getTime() / 1000)}`;
 
-    let allMessages = [];
+    const allMessages: gmail_v1.Schema$Message[] = [];
     let pageToken: string | undefined = undefined;
 
     do {
-      const response = await gmail.users.messages.list({
-        userId: "me",
-        q: query,
-        maxResults: 100,
-        pageToken,
-      });
+      const response: { data: gmail_v1.Schema$ListMessagesResponse } =
+        await gmail.users.messages.list({
+          userId: "me",
+          q: query,
+          maxResults: 100,
+          pageToken,
+        });
 
       const fetchedMessages = response.data.messages || [];
       allMessages.push(...fetchedMessages);
+      pageToken = response.data.nextPageToken || undefined;
     } while (pageToken);
 
     const processedApplications = [];
