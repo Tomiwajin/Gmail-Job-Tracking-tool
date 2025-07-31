@@ -1,5 +1,6 @@
 "use client";
 
+import { useApplicationStore } from "@/lib/useApplicationStore";
 import { useState, useEffect } from "react";
 import {
   Card,
@@ -63,7 +64,8 @@ const statusColors = {
 };
 
 export default function Dashboard() {
-  const [applications, setApplications] = useState<JobApplication[]>([]);
+  const applications = useApplicationStore((state) => state.applications);
+  const addApplications = useApplicationStore((state) => state.addApplications);
   const [filteredApplications, setFilteredApplications] = useState<
     JobApplication[]
   >([]);
@@ -75,8 +77,7 @@ export default function Dashboard() {
   const [isGmailConnected, setIsGmailConnected] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [gmailAuthUrl, setGmailAuthUrl] = useState("");
-
-  const [formError, setFormError] = useState<string | null>(null); // 🚨 NEW
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     let filtered = applications;
@@ -105,17 +106,12 @@ export default function Dashboard() {
   }, [applications, searchTerm, statusFilter, startDate, endDate]);
 
   const handleProcessEmails = async () => {
-    if (!startDate) {
-      setFormError("Please select a start date before processing emails.");
+    if (!startDate || !endDate) {
+      setFormError("Please select a valid start and end date.");
       return;
     }
 
-    if (!endDate) {
-      setFormError("Please select an end date before processing emails.");
-      return;
-    }
-
-    setFormError(null); // clear error
+    setFormError(null);
 
     if (!isGmailConnected) {
       window.location.href = gmailAuthUrl;
@@ -132,17 +128,11 @@ export default function Dashboard() {
 
       const result = await response.json();
       if (result.success && Array.isArray(result.applications)) {
-        setApplications((prev) => {
-          const existingIds = new Set(prev.map((app) => app.id));
-          const newApps = result.applications.filter(
-            (app: JobApplication) => !existingIds.has(app.id)
-          );
-          const newAppsWithDateObjects = newApps.map((app: any) => ({
-            ...app,
-            date: new Date(app.date),
-          }));
-          return [...prev, ...newAppsWithDateObjects];
-        });
+        const newAppsWithDateObjects = result.applications.map((app: any) => ({
+          ...app,
+          date: new Date(app.date),
+        }));
+        addApplications(newAppsWithDateObjects);
       }
     } catch (error) {
       console.error("Failed to process emails:", error);
@@ -179,6 +169,7 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Page header and Gmail actions */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Job Application Tracker</h1>
@@ -216,7 +207,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Email Processing Configuration */}
       <Card>
         <CardHeader>
           <CardTitle>Email Processing Settings</CardTitle>

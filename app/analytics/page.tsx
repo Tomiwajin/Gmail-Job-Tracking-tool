@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useApplicationStore } from "@/lib/useApplicationStore";
 import {
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, Users, Calendar, Target } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import {
   BarChart,
@@ -21,39 +21,15 @@ import {
   Cell,
   LineChart,
   Line,
-  ResponsiveContainer,
 } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { fetchAnalytics } from "@/lib/fetchAnalytics";
 
 export default function Analytics() {
-  const [applications, setApplications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const today = new Date();
-        const past = new Date();
-        past.setMonth(today.getMonth() - 6);
-        const data = await fetchAnalytics(
-          past.toISOString(),
-          today.toISOString()
-        );
-        setApplications(data.applications);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const applications = useApplicationStore((state) => state.applications);
 
   const statusCounts: Record<string, number> = {};
   const companyCounts: Record<string, number> = {};
@@ -124,8 +100,26 @@ export default function Analytics() {
     offers: { label: "Offers", color: "#22c55e" },
   };
 
-  if (loading)
-    return <div className="p-8 text-center">Loading analytics...</div>;
+  if (applications.length === 0) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center gap-4">
+          <Link href="/">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Analytics</h1>
+            <p className="text-muted-foreground">
+              No data available. Please visit the Dashboard to fetch analytics.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
