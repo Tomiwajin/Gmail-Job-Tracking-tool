@@ -76,6 +76,8 @@ export default function Dashboard() {
   const [userEmail, setUserEmail] = useState("");
   const [gmailAuthUrl, setGmailAuthUrl] = useState("");
 
+  const [formError, setFormError] = useState<string | null>(null); // 🚨 NEW
+
   useEffect(() => {
     let filtered = applications;
 
@@ -103,6 +105,13 @@ export default function Dashboard() {
   }, [applications, searchTerm, statusFilter, startDate, endDate]);
 
   const handleProcessEmails = async () => {
+    if (!startDate) {
+      setFormError("Please select a start date before processing emails.");
+      return;
+    }
+
+    setFormError(null); // clear error
+
     if (!isGmailConnected) {
       window.location.href = gmailAuthUrl;
       return;
@@ -118,13 +127,11 @@ export default function Dashboard() {
 
       const result = await response.json();
       if (result.success && Array.isArray(result.applications)) {
-        // Append new applications, avoiding duplicates by ID
         setApplications((prev) => {
           const existingIds = new Set(prev.map((app) => app.id));
           const newApps = result.applications.filter(
             (app: JobApplication) => !existingIds.has(app.id)
           );
-          // Convert date strings to Date objects
           const newAppsWithDateObjects = newApps.map((app: any) => ({
             ...app,
             date: new Date(app.date),
@@ -151,7 +158,6 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // Check Gmail authentication status on mount
     const checkGmailAuth = async () => {
       try {
         const response = await fetch("/api/auth/status");
@@ -213,51 +219,56 @@ export default function Dashboard() {
             Configure date range for email parsing
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex gap-4 items-end">
-          <div className="space-y-2">
-            <Label>Start Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-[240px] justify-start text-left font-normal bg-transparent"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "PPP") : "Pick start date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+        <CardContent className="flex flex-col gap-2">
+          <div className="flex gap-4 items-end">
+            <div className="space-y-2">
+              <Label>Start Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-[240px] justify-start text-left font-normal bg-transparent"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : "Pick start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-2">
+              <Label>End Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-[240px] justify-start text-left font-normal bg-transparent"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PPP") : "Pick end date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>End Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-[240px] justify-start text-left font-normal bg-transparent"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "PPP") : "Pick end date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={setEndDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+          {formError && (
+            <p className="text-sm text-red-600 mt-1">{formError}</p>
+          )}
         </CardContent>
       </Card>
 
