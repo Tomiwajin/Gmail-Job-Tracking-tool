@@ -75,7 +75,7 @@ npm install
 1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
 2. Enable Gmail API and Google+ API
 3. Create OAuth2 credentials
-4. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
+4. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/route`
 
 ### 3. Environment Variables
 Create `.env.local`:
