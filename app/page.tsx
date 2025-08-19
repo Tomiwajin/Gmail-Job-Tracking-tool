@@ -173,7 +173,7 @@ export default function Dashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Page header and Gmail actions */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center">
         <div>
           <h1 className="text-3xl font-bold">Job Application Tracker</h1>
           <p className="text-muted-foreground">
@@ -228,9 +228,9 @@ export default function Dashboard() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-[240px] justify-start text-left font-normal bg-transparent"
+                    className="w-[220px] justify-start text-left font-normal bg-transparent"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-2 w-4" />
                     {startDate ? format(startDate, "PPP") : "Pick start date"}
                   </Button>
                 </PopoverTrigger>
@@ -250,7 +250,7 @@ export default function Dashboard() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-[240px] justify-start text-left font-normal bg-transparent"
+                    className="w-[220px] justify-start text-left font-normal bg-transparent"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {endDate ? format(endDate, "PPP") : "Pick end date"}
@@ -304,7 +304,6 @@ export default function Dashboard() {
                 <SelectItem value="next-phase">Next Phase</SelectItem>
                 <SelectItem value="offer">Offer</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
-                <SelectItem value="withdrawn">Withdrawn</SelectItem>
               </SelectContent>
             </Select>
           </div>
