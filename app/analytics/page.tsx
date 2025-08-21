@@ -111,11 +111,7 @@ export default function Analytics() {
       <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
         <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
           <Link href="/">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-fit hover:bg-muted/50 -ml-2"
-            >
+            <Button variant="outline" size="sm" className="w-fit">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Button>
@@ -135,11 +131,7 @@ export default function Analytics() {
     <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
         <Link href="/">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-fit hover:bg-muted/50 -ml-2"
-          >
+          <Button variant="outline" size="sm" className="w-fit">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>

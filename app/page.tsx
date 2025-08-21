@@ -76,13 +76,16 @@ const statusColors = {
 export default function Dashboard() {
   const applications = useApplicationStore((state) => state.applications);
   const addApplications = useApplicationStore((state) => state.addApplications);
+  const startDate = useApplicationStore((state) => state.startDate);
+  const endDate = useApplicationStore((state) => state.endDate);
+  const setStartDate = useApplicationStore((state) => state.setStartDate);
+  const setEndDate = useApplicationStore((state) => state.setEndDate);
+
   const [filteredApplications, setFilteredApplications] = useState<
     JobApplication[]
   >([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGmailConnected, setIsGmailConnected] = useState(false);
   const [userEmail, setUserEmail] = useState("");
