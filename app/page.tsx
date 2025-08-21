@@ -171,37 +171,43 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Page header and Gmail actions */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold">Job Application Tracker</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Job Application Tracker
+          </h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Track and analyze your job applications from emails
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 md:gap-2">
           <ExportButton
             applications={applications}
             filteredApplications={filteredApplications}
           />
           <Link href="/analytics">
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
               <BarChart3 className="w-4 h-4 mr-2" />
               Analytics
             </Button>
           </Link>
           {!isGmailConnected ? (
-            <Button onClick={handleGmailLogin}>
+            <Button onClick={handleGmailLogin} className="w-full sm:w-auto">
               <Mail className="w-4 h-4 mr-2" />
               Connect Gmail
             </Button>
           ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-green-600">
+            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
+              <span className="text-xs sm:text-sm text-green-600 text-center sm:text-left">
                 ✓ Connected: {userEmail}
               </span>
-              <Button onClick={handleProcessEmails} disabled={isProcessing}>
+              <Button
+                onClick={handleProcessEmails}
+                disabled={isProcessing}
+                className="w-full sm:w-auto"
+              >
                 <RefreshCw
                   className={`w-4 h-4 mr-2 ${
                     isProcessing ? "animate-spin" : ""
@@ -215,22 +221,24 @@ export default function Dashboard() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Email Processing Settings</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg md:text-xl">
+            Email Processing Settings
+          </CardTitle>
+          <CardDescription className="text-sm md:text-base">
             Configure date range for email parsing
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          <div className="flex gap-4 items-end">
-            <div className="space-y-2">
+          <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 md:gap-4 md:items-end">
+            <div className="space-y-2 flex-1">
               <Label>Start Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-[220px] justify-start text-left font-normal bg-transparent"
+                    className="w-full sm:w-[220px] justify-start text-left font-normal bg-transparent"
                   >
-                    <CalendarIcon className="mr-2 h-2 w-4" />
+                    <CalendarIcon className="mr-2 h-4 w-4" />
                     {startDate ? format(startDate, "PPP") : "Pick start date"}
                   </Button>
                 </PopoverTrigger>
@@ -244,13 +252,13 @@ export default function Dashboard() {
                 </PopoverContent>
               </Popover>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 flex-1">
               <Label>End Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-[220px] justify-start text-left font-normal bg-transparent"
+                    className="w-full sm:w-[220px] justify-start text-left font-normal bg-transparent"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {endDate ? format(endDate, "PPP") : "Pick end date"}
@@ -275,9 +283,9 @@ export default function Dashboard() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Filters</CardTitle>
         </CardHeader>
-        <CardContent className="flex gap-4">
+        <CardContent className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:gap-4">
           <div className="flex-1">
             <Label htmlFor="search">Search</Label>
             <div className="relative">
@@ -291,7 +299,7 @@ export default function Dashboard() {
               />
             </div>
           </div>
-          <div className="w-48">
+          <div className="w-full md:w-48">
             <Label>Status</Label>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
@@ -312,12 +320,48 @@ export default function Dashboard() {
       {/* Applications Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
+          <CardTitle className="text-lg md:text-xl">
             Job Applications ({filteredApplications.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          {/* Mobile card view for small screens */}
+          <div className="block md:hidden space-y-4">
+            {filteredApplications.map((app) => (
+              <Card key={app.id} className="p-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-base">{app.company}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {app.role}
+                      </p>
+                    </div>
+                    <Badge className={statusColors[app.status]}>
+                      {app.status.replace("-", " ")}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">{app.email}</p>
+                    <p className="text-sm font-medium">
+                      {format(app.date, "MMM dd, yyyy")}
+                    </p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {app.subject}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+            {filteredApplications.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No applications found matching your filters.
+              </div>
+            )}
+          </div>
+
+          {/* Desktop table view for md and above */}
+          <div className="hidden md:block rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
