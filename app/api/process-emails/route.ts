@@ -522,13 +522,13 @@ export async function POST(request: NextRequest) {
         const jobData = extractJobData(emailContent);
 
         // Debugging Tool
-        if (
-          emailContent.includes("Indeed Application: Jr./Mid level Java/Python")
-        ) {
-          console.log("=== RAW EMAIL DEBUG ===");
-          console.log("Full Email Content:", emailContent);
-          console.log("=== END DEBUG ===");
-        }
+        // if (
+        //   emailContent.includes("Indeed Application: Jr./Mid level Java/Python")
+        // ) {
+        //   console.log("=== RAW EMAIL DEBUG ===");
+        //   console.log("Full Email Content:", emailContent);
+        //   console.log("=== END DEBUG ===");
+        // }
 
         if (jobData.isJobRelated) {
           processedApplications.push({

@@ -34,8 +34,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarIcon, Search, RefreshCw, BarChart3, Mail } from "lucide-react";
-import { format } from "date-fns";
+import {
+  CalendarIcon,
+  Search,
+  RefreshCw,
+  BarChart3,
+  Mail,
+  ChevronDown,
+} from "lucide-react";
+import { format, subDays, subMonths } from "date-fns";
 import Link from "next/link";
 
 interface JobApplication {
@@ -62,6 +69,14 @@ interface ProcessedApplication {
   email: string;
   date: string;
   subject: string;
+}
+
+interface DatePreset {
+  label: string;
+  getValue: () => {
+    start: Date;
+    end: Date;
+  };
 }
 
 const statusColors = {
@@ -91,6 +106,48 @@ export default function Dashboard() {
   const [userEmail, setUserEmail] = useState("");
   const [gmailAuthUrl, setGmailAuthUrl] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+
+  // Date range presets
+  const datePresets: DatePreset[] = [
+    {
+      label: "Last 7 days",
+      getValue: () => ({
+        start: subDays(new Date(), 6),
+        end: new Date(),
+      }),
+    },
+    {
+      label: "Last 30 days",
+      getValue: () => ({
+        start: subDays(new Date(), 29),
+        end: new Date(),
+      }),
+    },
+    {
+      label: "Last 3 months",
+      getValue: () => ({
+        start: subMonths(new Date(), 3),
+        end: new Date(),
+      }),
+    },
+    {
+      label: "Last 6 months",
+      getValue: () => ({
+        start: subMonths(new Date(), 6),
+        end: new Date(),
+      }),
+    },
+  ];
+
+  const handlePresetClick = (preset: DatePreset) => {
+    const { start, end } = preset.getValue();
+    setStartDate(start);
+    setEndDate(end);
+    setFormError(null);
+    setSelectedPreset(preset.label);
+  };
 
   useEffect(() => {
     let filtered = applications;
@@ -113,6 +170,24 @@ export default function Dashboard() {
     }
     setFilteredApplications(filtered);
   }, [applications, searchTerm, statusFilter, startDate, endDate]);
+
+  // Clear selected preset when dates are manually changed
+  useEffect(() => {
+    // Check if current dates match any preset
+    const matchingPreset = datePresets.find((preset) => {
+      const { start, end } = preset.getValue();
+      return (
+        startDate &&
+        endDate &&
+        startDate.toDateString() === start.toDateString() &&
+        endDate.toDateString() === end.toDateString()
+      );
+    });
+
+    if (!matchingPreset) {
+      setSelectedPreset(null);
+    }
+  }, [startDate, endDate]);
 
   const handleProcessEmails = async () => {
     if (!startDate || !endDate) {
@@ -231,53 +306,102 @@ export default function Dashboard() {
             Configure date range for email parsing
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 md:gap-4 md:items-end">
-            <div className="space-y-2 flex-1">
-              <Label>Start Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-[220px] justify-start text-left font-normal bg-transparent"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "PPP") : "Pick start date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="space-y-2 flex-1">
-              <Label>End Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-[220px] justify-start text-left font-normal bg-transparent"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "PPP") : "Pick end date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+        <CardContent className="flex flex-col gap-4">
+          {/* Date Range Presets */}
+          <div className="space-y-3">
+            <Label>Select Date Range</Label>
+            <div className="flex flex-wrap gap-2">
+              {datePresets.map((preset, index) => (
+                <Button
+                  key={index}
+                  variant={
+                    selectedPreset === preset.label ? "secondary" : "outline"
+                  }
+                  size="sm"
+                  className="h-9 px-4"
+                  onClick={() => handlePresetClick(preset)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
             </div>
           </div>
+
+          {/* Advanced Settings - Collapsible */}
+          <div className="space-y-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 font-normal justify-start"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+            >
+              <ChevronDown
+                className={`mr-2 h-4 w-4 transition-transform ${
+                  showAdvanced ? "rotate-180" : ""
+                }`}
+              />
+              Advanced settings
+            </Button>
+
+            {showAdvanced && (
+              <div className="space-y-4 pl-6 border-l-2 border-border">
+                <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 md:gap-4 md:items-end">
+                  <div className="space-y-2 flex-1">
+                    <Label>Start Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full sm:w-[220px] justify-start text-left font-normal bg-transparent"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {startDate
+                            ? format(startDate, "PPP")
+                            : "Pick start date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={startDate}
+                          onSelect={setStartDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="space-y-2 flex-1">
+                    <Label>End Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full sm:w-[220px] justify-start text-left font-normal bg-transparent"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {endDate ? format(endDate, "PPP") : "Pick end date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={endDate}
+                          onSelect={setEndDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+                {/* Future filtering settings will be added here */}
+                <div className="text-sm text-muted-foreground">
+                  Additional filtering options will be available here in the
+                  future.
+                </div>
+              </div>
+            )}
+          </div>
+
           {formError && (
             <p className="text-sm text-red-600 mt-1">{formError}</p>
           )}
