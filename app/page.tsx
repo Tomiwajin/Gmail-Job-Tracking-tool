@@ -41,6 +41,7 @@ import {
   BarChart3,
   Mail,
   ChevronDown,
+  ArrowUp,
 } from "lucide-react";
 import { format, subDays, subMonths } from "date-fns";
 import Link from "next/link";
@@ -108,6 +109,7 @@ export default function Dashboard() {
   const [formError, setFormError] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   // Date range presets
   const datePresets: DatePreset[] = [
@@ -149,6 +151,13 @@ export default function Dashboard() {
     setSelectedPreset(preset.label);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   useEffect(() => {
     let filtered = applications;
     if (searchTerm) {
@@ -188,6 +197,16 @@ export default function Dashboard() {
       setSelectedPreset(null);
     }
   }, [startDate, endDate]);
+
+  // Handle scroll for back to top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 200);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleProcessEmails = async () => {
     if (!startDate || !endDate) {
@@ -524,6 +543,18 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <Button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 shadow-lg hover:shadow-xl transition-shadow duration-300"
+          size="icon"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }
