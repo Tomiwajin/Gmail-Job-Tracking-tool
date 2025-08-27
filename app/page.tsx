@@ -42,6 +42,8 @@ import {
   Mail,
   ChevronDown,
   ArrowUp,
+  X,
+  Trash2,
 } from "lucide-react";
 import { format, subDays, subMonths } from "date-fns";
 import Link from "next/link";
@@ -89,9 +91,47 @@ const statusColors = {
   withdrawn: "bg-gray-100 text-gray-800",
 };
 
+// Helper function to check if email should be excluded (same logic as API)
+function shouldExcludeEmail(
+  emailAddress: string,
+  excludedEmails: string[]
+): boolean {
+  if (!excludedEmails || excludedEmails.length === 0) {
+    return false;
+  }
+
+  const normalizedEmail = emailAddress.toLowerCase().trim();
+  const extractedEmail =
+    normalizedEmail.match(/<(.+)>/)?.[1] || normalizedEmail;
+
+  return excludedEmails.some((excludedEmail) => {
+    const normalizedExcluded = excludedEmail.toLowerCase().trim();
+
+    if (extractedEmail === normalizedExcluded) {
+      return true;
+    }
+
+    if (
+      normalizedExcluded.startsWith("@") &&
+      extractedEmail.endsWith(normalizedExcluded)
+    ) {
+      return true;
+    }
+
+    if (extractedEmail.includes(normalizedExcluded)) {
+      return true;
+    }
+
+    return false;
+  });
+}
+
 export default function Dashboard() {
   const applications = useApplicationStore((state) => state.applications);
   const addApplications = useApplicationStore((state) => state.addApplications);
+  const removeApplications = useApplicationStore(
+    (state) => state.removeApplications
+  );
   const startDate = useApplicationStore((state) => state.startDate);
   const endDate = useApplicationStore((state) => state.endDate);
   const setStartDate = useApplicationStore((state) => state.setStartDate);
@@ -110,6 +150,73 @@ export default function Dashboard() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [excludedEmails, setExcludedEmails] = useState<string[]>([]);
+  const [newExcludedEmail, setNewExcludedEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  // Email validation function
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Add excluded email
+  const addExcludedEmail = () => {
+    const trimmedEmail = newExcludedEmail.trim().toLowerCase();
+
+    if (!trimmedEmail) {
+      setEmailError("Please enter an email address");
+      return;
+    }
+
+    if (
+      !validateEmail(trimmedEmail) &&
+      !trimmedEmail.startsWith("@") &&
+      trimmedEmail.length < 3
+    ) {
+      setEmailError("Please enter a valid email address or pattern");
+      return;
+    }
+
+    if (excludedEmails.includes(trimmedEmail)) {
+      setEmailError("This email is already in the exclusion list");
+      return;
+    }
+
+    const newExcludedList = [...excludedEmails, trimmedEmail];
+    setExcludedEmails(newExcludedList);
+    setNewExcludedEmail("");
+    setEmailError(null);
+
+    // Filter out existing applications that match the exclusion
+    filterExistingApplications(newExcludedList);
+  };
+
+  // Remove excluded email
+  const removeExcludedEmail = (emailToRemove: string) => {
+    const newExcludedList = excludedEmails.filter(
+      (email) => email !== emailToRemove
+    );
+    setExcludedEmails(newExcludedList);
+
+    // Note: We don't restore previously excluded applications
+    // as they may have been legitimately excluded
+  };
+
+  // Filter existing applications based on excluded emails
+  const filterExistingApplications = (excludedList: string[]) => {
+    const applicationsToRemove = applications.filter((app) =>
+      shouldExcludeEmail(app.email, excludedList)
+    );
+
+    if (applicationsToRemove.length > 0) {
+      const idsToRemove = applicationsToRemove.map((app) => app.id);
+      removeApplications(idsToRemove);
+      console.log(
+        `Removed ${applicationsToRemove.length} existing applications based on exclusion rules`
+      );
+    }
+  };
 
   // Date range presets
   const datePresets: DatePreset[] = [
@@ -223,7 +330,11 @@ export default function Dashboard() {
       const response = await fetch("/api/process-emails", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startDate, endDate }),
+        body: JSON.stringify({
+          startDate,
+          endDate,
+          excludedEmails,
+        }),
       });
       const result = await response.json();
       if (result.success && Array.isArray(result.applications)) {
@@ -234,6 +345,13 @@ export default function Dashboard() {
           })
         );
         addApplications(newAppsWithDateObjects);
+
+        // Show processing summary
+        if (result.excludedCount > 0) {
+          console.log(
+            `Processed ${result.processed} applications, excluded ${result.excludedCount} emails`
+          );
+        }
       }
     } catch (error) {
       console.error("Failed to process emails:", error);
@@ -412,10 +530,73 @@ export default function Dashboard() {
                     </Popover>
                   </div>
                 </div>
-                {/* Future filtering settings will be added here */}
-                <div className="text-sm text-muted-foreground">
-                  Additional filtering options will be available here in the
-                  future.
+                {/* Email Exclusion Settings */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">
+                    Email Exclusions
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Add email addresses that should be ignored during
+                    processing. Adding exclusions will also remove matching
+                    applications already in your list.
+                  </p>
+
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                    <Input
+                      placeholder="Enter email to exclude (e.g., noreply@company.com)"
+                      value={newExcludedEmail}
+                      onChange={(e) => {
+                        setNewExcludedEmail(e.target.value);
+                        setEmailError(null);
+                      }}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addExcludedEmail();
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={addExcludedEmail}
+                      variant="outline"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
+                      Add
+                    </Button>
+                  </div>
+
+                  {emailError && (
+                    <p className="text-xs text-red-600">{emailError}</p>
+                  )}
+
+                  {/* Display excluded emails */}
+                  {excludedEmails.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">
+                        Excluded Emails ({excludedEmails.length})
+                      </Label>
+                      <div className="flex flex-wrap gap-2">
+                        {excludedEmails.map((email, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs px-2 py-1 flex items-center gap-1"
+                          >
+                            {email}
+                            <button
+                              onClick={() => removeExcludedEmail(email)}
+                              className="ml-1 hover:bg-red-100 rounded-full p-0.5"
+                              aria-label={`Remove ${email}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

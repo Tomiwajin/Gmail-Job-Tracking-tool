@@ -295,7 +295,7 @@ function extractJobData(emailContent: string) {
       /Your application was viewed/gi,
       /application for the position listed below is not quite finished/gi,
       /Your submission is saved as a draft/gi,
-      /you haven’t completed an application yet /gi,
+      /you haven't completed an application yet /gi,
       /May I send you more info on these roles/gi,
       /Make sure to use this link so I can track your application/gi,
       /job placement program/gi,
@@ -423,10 +423,50 @@ function extractEmailBody(payload: any): string {
   return body.trim();
 }
 
-// Updated POST function with improved email processing
+// Helper function to check if email should be excluded
+function shouldExcludeEmail(
+  emailAddress: string,
+  excludedEmails: string[]
+): boolean {
+  if (!excludedEmails || excludedEmails.length === 0) {
+    return false;
+  }
+
+  const normalizedEmail = emailAddress.toLowerCase().trim();
+
+  // Extract email from format "Name <email@domain.com>"
+  const extractedEmail =
+    normalizedEmail.match(/<(.+)>/)?.[1] || normalizedEmail;
+
+  return excludedEmails.some((excludedEmail) => {
+    const normalizedExcluded = excludedEmail.toLowerCase().trim();
+
+    // Exact match
+    if (extractedEmail === normalizedExcluded) {
+      return true;
+    }
+
+    // Domain match (e.g., exclude all emails from @noreply.company.com)
+    if (
+      normalizedExcluded.startsWith("@") &&
+      extractedEmail.endsWith(normalizedExcluded)
+    ) {
+      return true;
+    }
+
+    // Partial domain match (e.g., "noreply" matches any email containing "noreply")
+    if (extractedEmail.includes(normalizedExcluded)) {
+      return true;
+    }
+
+    return false;
+  });
+}
+
+// Updated POST function with excluded emails support
 export async function POST(request: NextRequest) {
   try {
-    const { startDate, endDate } = await request.json();
+    const { startDate, endDate, excludedEmails = [] } = await request.json();
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("gmail_access_token")?.value;
     const refreshToken = cookieStore.get("gmail_refresh_token")?.value;
@@ -495,6 +535,7 @@ export async function POST(request: NextRequest) {
     } while (pageToken);
 
     const processedApplications = [];
+    let excludedCount = 0;
 
     for (const message of allMessages) {
       try {
@@ -510,6 +551,13 @@ export async function POST(request: NextRequest) {
         const from = headers.find((h) => h.name === "From")?.value || "";
         const subject = headers.find((h) => h.name === "Subject")?.value || "";
         const date = new Date(Number.parseInt(email.internalDate));
+
+        // Check if this email should be excluded
+        if (shouldExcludeEmail(from, excludedEmails)) {
+          excludedCount++;
+          console.log(`Excluding email from: ${from}`);
+          continue;
+        }
 
         // Use the improved body extraction
         const body = extractEmailBody(email.payload);
@@ -553,6 +601,8 @@ export async function POST(request: NextRequest) {
       processed: processedApplications.length,
       applications: processedApplications,
       totalFound: allMessages.length,
+      excludedCount: excludedCount,
+      excludedEmails: excludedEmails,
     });
   } catch (error) {
     console.error("Gmail processing error:", error);
