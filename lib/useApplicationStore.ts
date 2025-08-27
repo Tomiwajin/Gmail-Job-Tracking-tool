@@ -85,7 +85,7 @@ function shouldExcludeEmail(
 
 export const useApplicationStore = create<ApplicationStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       applications: [],
       startDate: undefined,
       endDate: undefined,

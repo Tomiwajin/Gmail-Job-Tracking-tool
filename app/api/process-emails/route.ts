@@ -415,11 +415,6 @@ function extractEmailBody(payload: gmail_v1.Schema$MessagePart): string {
   // Start with the main payload
   body = extractFromPart(payload);
 
-  // If we still don't have content, try the snippet as a fallback
-  if (!body.trim() && (payload as any).snippet) {
-    body = (payload as any).snippet;
-  }
-
   return body.trim();
 }
 

@@ -1,4 +1,5 @@
 "use client";
+import { AccountSettings } from "@/components/account-settings";
 import { ExportButton } from "@/components/export-button";
 import { useApplicationStore } from "@/lib/useApplicationStore";
 import { useState, useEffect } from "react";
@@ -43,7 +44,7 @@ import {
   ChevronDown,
   ArrowUp,
   X,
-  Trash2,
+  Settings,
 } from "lucide-react";
 import { format, subDays, subMonths } from "date-fns";
 import Link from "next/link";
@@ -126,6 +127,38 @@ function shouldExcludeEmail(
   });
 }
 
+// Date range presets
+const datePresets: DatePreset[] = [
+  {
+    label: "Last 7 days",
+    getValue: () => ({
+      start: subDays(new Date(), 6),
+      end: new Date(),
+    }),
+  },
+  {
+    label: "Last 30 days",
+    getValue: () => ({
+      start: subDays(new Date(), 29),
+      end: new Date(),
+    }),
+  },
+  {
+    label: "Last 3 months",
+    getValue: () => ({
+      start: subMonths(new Date(), 3),
+      end: new Date(),
+    }),
+  },
+  {
+    label: "Last 6 months",
+    getValue: () => ({
+      start: subMonths(new Date(), 6),
+      end: new Date(),
+    }),
+  },
+];
+
 export default function Dashboard() {
   const applications = useApplicationStore((state) => state.applications);
   const addApplications = useApplicationStore((state) => state.addApplications);
@@ -153,6 +186,13 @@ export default function Dashboard() {
   const [excludedEmails, setExcludedEmails] = useState<string[]>([]);
   const [newExcludedEmail, setNewExcludedEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
+
+  const handleDisconnect = () => {
+    setIsGmailConnected(false);
+    setUserEmail("");
+    setShowAccountSettings(false);
+  };
 
   // Email validation function
   const validateEmail = (email: string): boolean => {
@@ -217,39 +257,6 @@ export default function Dashboard() {
       );
     }
   };
-
-  // Date range presets
-  const datePresets: DatePreset[] = [
-    {
-      label: "Last 7 days",
-      getValue: () => ({
-        start: subDays(new Date(), 6),
-        end: new Date(),
-      }),
-    },
-    {
-      label: "Last 30 days",
-      getValue: () => ({
-        start: subDays(new Date(), 29),
-        end: new Date(),
-      }),
-    },
-    {
-      label: "Last 3 months",
-      getValue: () => ({
-        start: subMonths(new Date(), 3),
-        end: new Date(),
-      }),
-    },
-    {
-      label: "Last 6 months",
-      getValue: () => ({
-        start: subMonths(new Date(), 6),
-        end: new Date(),
-      }),
-    },
-  ];
-
   const handlePresetClick = (preset: DatePreset) => {
     const { start, end } = preset.getValue();
     setStartDate(start);
@@ -414,26 +421,50 @@ export default function Dashboard() {
               Connect Gmail
             </Button>
           ) : (
-            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
-              <span className="text-xs sm:text-sm text-green-600 text-center sm:text-left">
-                ✓ Connected: {userEmail}
-              </span>
-              <Button
-                onClick={handleProcessEmails}
-                disabled={isProcessing}
-                className="w-full sm:w-auto"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 mr-2 ${
-                    isProcessing ? "animate-spin" : ""
-                  }`}
-                />
-                {isProcessing ? "Processing..." : "Process Emails"}
-              </Button>
+            <div className="flex flex-col space-y-2">
+              {/* Connection status - improved mobile layout */}
+              <div className="text-xs sm:text-sm text-green-600 text-center sm:text-left bg-green-50 px-2 py-1 rounded border border-green-200">
+                ✓ Connected:{" "}
+                <span className="font-medium break-all">{userEmail}</span>
+              </div>
+              <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                <Button
+                  onClick={() => setShowAccountSettings(!showAccountSettings)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </Button>
+                <Button
+                  onClick={handleProcessEmails}
+                  disabled={isProcessing}
+                  className="w-full sm:w-auto"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 mr-2 ${
+                      isProcessing ? "animate-spin" : ""
+                    }`}
+                  />
+                  {isProcessing ? "Processing..." : "Process Emails"}
+                </Button>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Account Settings Section - FIXED: Only show when settings button is clicked */}
+      {showAccountSettings && (
+        <AccountSettings
+          userEmail={userEmail}
+          isGmailConnected={isGmailConnected}
+          onDisconnect={handleDisconnect}
+          onConnect={handleGmailLogin}
+        />
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg md:text-xl">
@@ -444,10 +475,10 @@ export default function Dashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {/* Date Range Presets */}
+          {/* Date Range Presets - improved mobile layout */}
           <div className="space-y-3">
             <Label>Select Date Range</Label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {datePresets.map((preset, index) => (
                 <Button
                   key={index}
@@ -455,7 +486,7 @@ export default function Dashboard() {
                     selectedPreset === preset.label ? "secondary" : "outline"
                   }
                   size="sm"
-                  className="h-9 px-4"
+                  className="h-9 px-2 sm:px-4 text-xs sm:text-sm"
                   onClick={() => handlePresetClick(preset)}
                 >
                   {preset.label}
@@ -482,6 +513,7 @@ export default function Dashboard() {
 
             {showAdvanced && (
               <div className="space-y-4 pl-6 border-l-2 border-border">
+                {/* Date pickers - improved mobile layout */}
                 <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 md:gap-4 md:items-end">
                   <div className="space-y-2 flex-1">
                     <Label>Start Date</Label>
@@ -489,12 +521,14 @@ export default function Dashboard() {
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full sm:w-[220px] justify-start text-left font-normal bg-transparent"
+                          className="w-full justify-start text-left font-normal bg-transparent"
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {startDate
-                            ? format(startDate, "PPP")
-                            : "Pick start date"}
+                          <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">
+                            {startDate
+                              ? format(startDate, "PPP")
+                              : "Pick start date"}
+                          </span>
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -513,10 +547,12 @@ export default function Dashboard() {
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full sm:w-[220px] justify-start text-left font-normal bg-transparent"
+                          className="w-full justify-start text-left font-normal bg-transparent"
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {endDate ? format(endDate, "PPP") : "Pick end date"}
+                          <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">
+                            {endDate ? format(endDate, "PPP") : "Pick end date"}
+                          </span>
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -582,12 +618,17 @@ export default function Dashboard() {
                           <Badge
                             key={index}
                             variant="secondary"
-                            className="text-xs px-2 py-1 flex items-center gap-1"
+                            className="text-xs px-2 py-1 flex items-center gap-1 max-w-full"
                           >
-                            {email}
+                            <span
+                              className="truncate max-w-[120px] sm:max-w-none"
+                              title={email}
+                            >
+                              {email}
+                            </span>
                             <button
                               onClick={() => removeExcludedEmail(email)}
-                              className="ml-1 hover:bg-red-100 rounded-full p-0.5"
+                              className="ml-1 hover:bg-red-100 rounded-full p-0.5 flex-shrink-0"
                               aria-label={`Remove ${email}`}
                             >
                               <X className="h-3 w-3" />
@@ -652,28 +693,42 @@ export default function Dashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Mobile card view for small screens */}
-          <div className="block md:hidden space-y-4">
+          {/* Mobile card view for small screens - IMPROVED */}
+          <div className="block md:hidden space-y-3">
             {filteredApplications.map((app) => (
-              <Card key={app.id} className="p-4">
+              <Card key={app.id} className="p-3 shadow-sm">
                 <div className="space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-base">{app.company}</h3>
-                      <p className="text-sm text-muted-foreground">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-base truncate">
+                        {app.company}
+                      </h3>
+                      <p className="text-sm text-muted-foreground truncate">
                         {app.role}
                       </p>
                     </div>
-                    <Badge className={statusColors[app.status]}>
+                    <Badge
+                      className={`${
+                        statusColors[app.status]
+                      } flex-shrink-0 text-xs`}
+                    >
                       {app.status.replace("-", " ")}
                     </Badge>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">{app.email}</p>
-                    <p className="text-sm font-medium">
+                  <div className="space-y-1 text-sm">
+                    <p
+                      className="text-muted-foreground truncate"
+                      title={app.email}
+                    >
+                      {app.email}
+                    </p>
+                    <p className="font-medium">
                       {format(app.date, "MMM dd, yyyy")}
                     </p>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
+                    <p
+                      className="text-muted-foreground line-clamp-2 leading-relaxed text-xs"
+                      title={app.subject}
+                    >
                       {app.subject}
                     </p>
                   </div>
@@ -682,12 +737,12 @@ export default function Dashboard() {
             ))}
             {filteredApplications.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                No applications found matching your filters.
+                <p>No applications found matching your filters.</p>
               </div>
             )}
           </div>
 
-          {/* Desktop table view for md and above */}
+          {/* Desktop table view for md and above - KEPT ORIGINAL */}
           <div className="hidden md:block rounded-md border">
             <Table>
               <TableHeader>
