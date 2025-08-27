@@ -57,7 +57,7 @@ function extractJobData(emailContent: string) {
   for (const pattern of rolePatterns) {
     const match = emailContent.match(pattern);
     if (match && match[1] && match[1].trim().length > 0) {
-      let candidateRole = match[1]
+      const candidateRole = match[1]
         .replace(/\(.*?\)/g, "")
         .replace(
           /\b(?:the|a|an|position|role|our|job|openings|within|company|Hiring|this)\b/gi,
@@ -127,7 +127,7 @@ function extractJobData(emailContent: string) {
   for (const pattern of companyPatterns) {
     const match = subject.match(pattern);
     if (match && match[1] && match[1].trim().length > 0) {
-      let candidateCompany = match[1]
+      const candidateCompany = match[1]
         .replace(/\b(intern|Company|Team|our|Application|position)\b\.?/gi, "")
         .replace(/\b(?:the|a|an)\b/gi, "")
         .trim();
@@ -143,7 +143,7 @@ function extractJobData(emailContent: string) {
     for (const pattern of companyPatterns) {
       const match = emailContent.match(pattern);
       if (match && match[1] && match[1].trim().length > 0) {
-        let candidateCompany = match[1]
+        const candidateCompany = match[1]
           .replace(/\b(Corp|Company|Team|Hiring)\b\.?/gi, "")
           .replace(/\b(?:the|a|an)\b/gi, "")
           .trim();
@@ -366,11 +366,11 @@ function extractJobData(emailContent: string) {
 }
 
 // Enhanced email body extraction function
-function extractEmailBody(payload: any): string {
+function extractEmailBody(payload: gmail_v1.Schema$MessagePart): string {
   let body = "";
 
   // Recursive function to extract text from nested parts
-  const extractFromPart = (part: any): string => {
+  const extractFromPart = (part: gmail_v1.Schema$MessagePart): string => {
     let text = "";
 
     // Check if this part has body data
@@ -416,8 +416,8 @@ function extractEmailBody(payload: any): string {
   body = extractFromPart(payload);
 
   // If we still don't have content, try the snippet as a fallback
-  if (!body.trim() && payload.snippet) {
-    body = payload.snippet;
+  if (!body.trim() && (payload as any).snippet) {
+    body = (payload as any).snippet;
   }
 
   return body.trim();

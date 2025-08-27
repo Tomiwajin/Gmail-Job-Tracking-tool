@@ -90,9 +90,9 @@ export default function Privacy() {
 
         <h2>Third-Party Services</h2>
         <h3>Google Services</h3>
-        <p>We use Google's Gmail API and OAuth services:</p>
+        <p>We use Google&apos;s Gmail API and OAuth services:</p>
         <ul>
-          <li>Subject to Google's Privacy Policy</li>
+          <li>Subject to Google&apos;s Privacy Policy</li>
           <li>Gmail access is granted through secure OAuth 2.0</li>
           <li>
             You can revoke access at any time through your Google Account
@@ -118,7 +118,7 @@ export default function Privacy() {
           <li>We do not retain data after you revoke access</li>
         </ul>
 
-        <h2>Children's Privacy</h2>
+        <h2>Children&apos;s Privacy</h2>
         <p>
           Our service is not intended for children under 13. We do not knowingly
           collect personal information from children under 13.
@@ -128,7 +128,7 @@ export default function Privacy() {
         <p>
           We may update this Privacy Policy from time to time. We will notify
           you of any changes by posting the new Privacy Policy on this page and
-          updating the "Last Updated" date.
+          updating the &quot;Last Updated&quot; date.
         </p>
 
         <h2>Contact Information</h2>

@@ -38,9 +38,9 @@ export default function Terms() {
 
         <h2>1. Acceptance of Terms</h2>
         <p>
-          By accessing and using Job Application Tracker ("the Service"), you
-          accept and agree to be bound by the terms and provision of this
-          agreement.
+          By accessing and using Job Application Tracker (&quot;the
+          Service&quot;), you accept and agree to be bound by the terms and
+          provision of this agreement.
         </p>
 
         <h2>2. Description of Service</h2>
@@ -69,8 +69,8 @@ export default function Terms() {
             account
           </li>
           <li>
-            You agree to use the Service in compliance with Google's Terms of
-            Service
+            You agree to use the Service in compliance with Google&apos;s Terms
+            of Service
           </li>
         </ul>
 
@@ -82,8 +82,8 @@ export default function Terms() {
         <ul>
           <li>Violate any applicable laws or regulations</li>
           <li>
-            Attempt to gain unauthorized access to the Service or other users'
-            accounts
+            Attempt to gain unauthorized access to the Service or other
+            users&apos; accounts
           </li>
           <li>Interfere with or disrupt the Service or servers</li>
           <li>
@@ -112,9 +112,9 @@ export default function Terms() {
 
         <h2>7. Disclaimer of Warranties</h2>
         <p>
-          The Service is provided on an "AS IS" and "AS AVAILABLE" basis. We
-          make no representations or warranties of any kind, express or implied,
-          including but not limited to:
+          The Service is provided on an &quot;AS IS&quot; and &quot;AS
+          AVAILABLE&quot; basis. We make no representations or warranties of any
+          kind, express or implied, including but not limited to:
         </p>
         <ul>
           <li>
@@ -136,10 +136,11 @@ export default function Terms() {
         <h2>9. Third-Party Services</h2>
         <p>The Service integrates with Google Gmail API and is subject to:</p>
         <ul>
-          <li>Google's Terms of Service</li>
+          <li>Google&apos;s Terms of Service</li>
           <li>Google API Services User Data Policy</li>
           <li>
-            Changes in Google's API or policies may affect Service functionality
+            Changes in Google&apos;s API or policies may affect Service
+            functionality
           </li>
         </ul>
 
@@ -178,7 +179,7 @@ export default function Terms() {
         <p>
           We reserve the right to modify these Terms at any time. We will notify
           users of any changes by posting the new Terms on this page and
-          updating the "Last Updated" date.
+          updating the &quot;Last Updated&quot; date.
         </p>
 
         <h2>14. Governing Law</h2>
