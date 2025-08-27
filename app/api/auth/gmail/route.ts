@@ -18,6 +18,8 @@ export async function GET() {
       access_type: "offline",
       scope: scopes,
       prompt: "consent",
+      include_granted_scopes: true,
+      response_type: "code",
     });
 
     return NextResponse.json({ authUrl });
