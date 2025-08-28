@@ -2,6 +2,7 @@
 import { AccountSettings } from "@/components/account-settings";
 import { ExportButton } from "@/components/export-button";
 import { useApplicationStore } from "@/lib/useApplicationStore";
+import { useExcludedEmails } from "@/hooks/useExcludedEmails";
 import { useState, useEffect } from "react";
 import {
   Card,
@@ -170,6 +171,14 @@ export default function Dashboard() {
   const setStartDate = useApplicationStore((state) => state.setStartDate);
   const setEndDate = useApplicationStore((state) => state.setEndDate);
 
+  const {
+    excludedEmails,
+    loading: excludedEmailsLoading,
+    error: excludedEmailsError,
+    addExcludedEmail,
+    removeExcludedEmail,
+  } = useExcludedEmails();
+
   const [filteredApplications, setFilteredApplications] = useState<
     JobApplication[]
   >([]);
@@ -183,7 +192,6 @@ export default function Dashboard() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [excludedEmails, setExcludedEmails] = useState<string[]>([]);
   const [newExcludedEmail, setNewExcludedEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
@@ -201,7 +209,7 @@ export default function Dashboard() {
   };
 
   // Add excluded email
-  const addExcludedEmail = () => {
+  const handleAddExcludedEmail = async () => {
     const trimmedEmail = newExcludedEmail.trim().toLowerCase();
 
     if (!trimmedEmail) {
@@ -223,24 +231,21 @@ export default function Dashboard() {
       return;
     }
 
-    const newExcludedList = [...excludedEmails, trimmedEmail];
-    setExcludedEmails(newExcludedList);
-    setNewExcludedEmail("");
-    setEmailError(null);
-
-    // Filter out existing applications that match the exclusion
-    filterExistingApplications(newExcludedList);
+    const success = await addExcludedEmail(trimmedEmail);
+    if (success) {
+      setNewExcludedEmail("");
+      setEmailError(null);
+      // Filter out existing applications that match the exclusion
+      filterExistingApplications([...excludedEmails, trimmedEmail]);
+    } else {
+      setEmailError("Failed to save email exclusion");
+    }
   };
 
   // Remove excluded email
-  const removeExcludedEmail = (emailToRemove: string) => {
-    const newExcludedList = excludedEmails.filter(
-      (email) => email !== emailToRemove
-    );
-    setExcludedEmails(newExcludedList);
-
+  const handleRemoveExcludedEmail = async (emailToRemove: string) => {
+    await removeExcludedEmail(emailToRemove);
     // Note: We don't restore previously excluded applications
-    // as they may have been legitimately excluded
   };
 
   // Filter existing applications based on excluded emails
@@ -257,6 +262,7 @@ export default function Dashboard() {
       );
     }
   };
+
   const handlePresetClick = (preset: DatePreset) => {
     const { start, end } = preset.getValue();
     setStartDate(start);
@@ -566,6 +572,7 @@ export default function Dashboard() {
                     </Popover>
                   </div>
                 </div>
+
                 {/* Email Exclusion Settings */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">
@@ -588,16 +595,18 @@ export default function Dashboard() {
                       onKeyPress={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
-                          addExcludedEmail();
+                          handleAddExcludedEmail();
                         }
                       }}
                       className="flex-1"
+                      disabled={excludedEmailsLoading}
                     />
                     <Button
-                      onClick={addExcludedEmail}
+                      onClick={handleAddExcludedEmail}
                       variant="outline"
                       size="sm"
                       className="w-full sm:w-auto"
+                      disabled={excludedEmailsLoading}
                     >
                       Add
                     </Button>
@@ -607,11 +616,18 @@ export default function Dashboard() {
                     <p className="text-xs text-red-600">{emailError}</p>
                   )}
 
+                  {excludedEmailsError && (
+                    <p className="text-xs text-red-600">
+                      {excludedEmailsError}
+                    </p>
+                  )}
+
                   {/* Display excluded emails */}
                   {excludedEmails.length > 0 && (
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">
                         Excluded Emails ({excludedEmails.length})
+                        {excludedEmailsLoading && <span> - Loading...</span>}
                       </Label>
                       <div className="flex flex-wrap gap-2">
                         {excludedEmails.map((email, index) => (
@@ -627,9 +643,10 @@ export default function Dashboard() {
                               {email}
                             </span>
                             <button
-                              onClick={() => removeExcludedEmail(email)}
+                              onClick={() => handleRemoveExcludedEmail(email)}
                               className="ml-1 hover:bg-red-100 rounded-full p-0.5 flex-shrink-0"
                               aria-label={`Remove ${email}`}
+                              disabled={excludedEmailsLoading}
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -648,6 +665,7 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -685,6 +703,7 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+
       {/* Applications Table */}
       <Card>
         <CardHeader>

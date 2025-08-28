@@ -288,7 +288,7 @@ function extractJobData(emailContent: string) {
       /Glassdoor Community/gi,
       /you're signed up to/gi,
       /Getting Application Ready/gi,
-      / is hiring now/gi,
+      /is hiring now/gi,
       /Are you still interested in these jobs/gi,
       /1-Click Apply/gi,
       /jobs recommended/gi,
@@ -550,7 +550,6 @@ export async function POST(request: NextRequest) {
         // Check if this email should be excluded
         if (shouldExcludeEmail(from, excludedEmails)) {
           excludedCount++;
-          console.log(`Excluding email from: ${from}`);
           continue;
         }
 
