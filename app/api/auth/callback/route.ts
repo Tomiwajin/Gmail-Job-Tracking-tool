@@ -10,6 +10,12 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_REDIRECT_URI
 );
 
+// Define a proper interface for the update data
+interface UserUpdateData {
+  updated_at: string;
+  gmail_refresh_token?: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -40,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     if (existingUser) {
       // Update existing user
-      const updateData: any = {
+      const updateData: UserUpdateData = {
         updated_at: new Date().toISOString(),
       };
 

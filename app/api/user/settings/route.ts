@@ -54,26 +54,16 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { excluded_emails } = body;
 
-    // Test Supabase connection first
-    const { data: testData, error: testError } = await supabase
-      .from("user_settings")
-      .select("*")
-      .eq("user_id", userId)
-      .limit(1);
-
-    const { data, error } = await supabase
-      .from("user_settings")
-      .upsert(
-        {
-          user_id: userId,
-          excluded_emails: excluded_emails || [],
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "user_id",
-        }
-      )
-      .select();
+    const { error } = await supabase.from("user_settings").upsert(
+      {
+        user_id: userId,
+        excluded_emails: excluded_emails || [],
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "user_id",
+      }
+    );
 
     if (error) {
       console.error("Settings update error:", error);
