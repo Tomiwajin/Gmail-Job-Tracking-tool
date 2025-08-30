@@ -51,6 +51,7 @@ function extractJobData(emailContent: string) {
     /interest you have expressed in the\s+([^.]+?)\s+position and in employment/i,
     /your application to\s+(.+?)\s+for\s+/i,
     /Thank you for your interest in our\s+([A-Za-z][^:.,!?\n\r]*)/i,
+    /Thank you for submitting your application to be a\s+([A-Za-z][^:.,!?\n\r,]*)\s+at/i,
   ];
 
   let role = "Unknown";
@@ -229,6 +230,7 @@ function extractJobData(emailContent: string) {
     "excited to offer",
     "offer you the position",
     "we would like to extend an offer",
+    "Welcome to the team",
   ];
 
   const nextPhaseIndicators = [
@@ -307,7 +309,6 @@ function extractJobData(emailContent: string) {
       /Applications now open/gi,
       /progress is saved/gi,
       /Complete your application/gi,
-      /Here's a copy of your application/gi,
       /Apply to jobs at/gi,
       /complete this survey/gi,
       /Advertisement/gi,
@@ -340,6 +341,7 @@ function extractJobData(emailContent: string) {
       /role has been filled/gi,
       /position has been filled/gi,
       /closed or temporarily put.*on hold/gi,
+      /has been closed/gi,
     ];
 
     const totalMatches = closedPatterns.reduce((count, pattern) => {
