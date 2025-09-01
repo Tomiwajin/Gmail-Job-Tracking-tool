@@ -403,9 +403,7 @@ export default function Dashboard() {
       {/* Page header and Gmail actions */}
       <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">
-            Job Application Tracker
-          </h1>
+          <h1 className="text-2xl md:text-3xl font-bold">CareerSync</h1>
           <p className="text-muted-foreground text-sm md:text-base">
             Track and analyze your job applications from emails
           </p>
@@ -708,7 +706,7 @@ export default function Dashboard() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg md:text-xl">
-            Job Applications ({filteredApplications.length})
+            Job Updates ({filteredApplications.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
