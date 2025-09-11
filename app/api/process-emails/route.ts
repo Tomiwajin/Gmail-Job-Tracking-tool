@@ -21,6 +21,15 @@ interface ClassificationResult {
   success?: boolean;
 }
 
+// Define proper type for email metadata
+interface EmailMetadata {
+  from: string;
+  subject: string;
+  date: Date;
+  body: string;
+  snippet: string;
+}
+
 // Function to classify email using your deployed HuggingFace Space with Gradio Client
 async function classifyEmail(emailText: string): Promise<ClassificationResult> {
   try {
@@ -463,7 +472,7 @@ export async function POST(request: NextRequest) {
     const emailsForClassification: Array<{
       text: string;
       id: string;
-      metadata: any;
+      metadata: EmailMetadata;
     }> = [];
     const excludedCount = { excluded: 0 };
 
