@@ -345,8 +345,6 @@ function extractEmailBody(payload: gmail_v1.Schema$MessagePart): string {
             .replace(/\s+/g, " ")
             .trim();
           text += htmlStripped + "\n";
-        } else if (part.mimeType?.includes("text/plain")) {
-          text += decoded + "\n";
         }
       } catch (error) {
         console.error("Error decoding part:", error);
@@ -559,18 +557,6 @@ export async function POST(request: NextRequest) {
 
       if (isJobRelated) {
         classifiedAsJob++;
-
-        // Debug logging for specific emails
-        // if (
-        //   emailData.metadata.body.includes("email text") ||
-        //   emailData.metadata.body.includes("email text")
-        // ) {
-        //   console.log("=== CLASSIFICATION RESULT DEBUG ===");
-        //   console.log("Email classified as:", classification.label);
-        //   console.log("Confidence score:", classification.score);
-        //   console.log("Subject:", emailData.metadata.subject);
-        //   console.log("===================================");
-        // }
 
         // Extract job details using regex
         const { from, subject, date, body, snippet } = emailData.metadata;
