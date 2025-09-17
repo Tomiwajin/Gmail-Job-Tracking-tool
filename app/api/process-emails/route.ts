@@ -278,6 +278,7 @@ function extractJobData(emailContent: string) {
 
   let company = "Unknown";
 
+  // First try patterns on the subject line
   for (const pattern of companyPatterns) {
     const match = subject.match(pattern);
     if (match && match[1] && match[1].trim().length > 0) {
@@ -286,13 +287,16 @@ function extractJobData(emailContent: string) {
         .replace(/\b(?:the|a|an)\b/gi, "")
         .trim();
 
-      if (candidateCompany.length > 0) {
+      // Check if the company name is 22 characters or less and not empty
+      if (candidateCompany.length > 0 && candidateCompany.length <= 22) {
         company = candidateCompany;
         break;
       }
+      // If longer than 22 characters, continue to try next pattern
     }
   }
 
+  // If no suitable company found in subject, try the full email content
   if (company === "Unknown") {
     for (const pattern of companyPatterns) {
       const match = emailContent.match(pattern);
@@ -302,10 +306,12 @@ function extractJobData(emailContent: string) {
           .replace(/\b(?:the|a|an)\b/gi, "")
           .trim();
 
-        if (candidateCompany.length > 0) {
+        // Check if the company name is 22 characters or less and not empty
+        if (candidateCompany.length > 0 && candidateCompany.length <= 22) {
           company = candidateCompany;
           break;
         }
+        // If longer than 22 characters, continue to try next pattern
       }
     }
   }
