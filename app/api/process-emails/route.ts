@@ -322,7 +322,7 @@ function extractJobData(emailContent: string) {
   };
 }
 
-//Email body extraction function
+// Updated email body extraction function that only processes HTML and excludes hidden text
 function extractEmailBody(payload: gmail_v1.Schema$MessagePart): string {
   let body = "";
 
@@ -335,23 +335,67 @@ function extractEmailBody(payload: gmail_v1.Schema$MessagePart): string {
       try {
         const decoded = Buffer.from(part.body.data, "base64").toString("utf-8");
 
-        // If it's HTML, try to extract text content
+        // Only process HTML content, skip text/plain
         if (part.mimeType?.includes("text/html")) {
-          // Remove HTML tags and decode entities
-          const htmlStripped = decoded
+          // Remove script and style tags completely
+          let htmlContent = decoded
             .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+
+          // Remove hidden elements and their content based on common hiding patterns
+          htmlContent = htmlContent
+            // Remove elements with display:none
+            .replace(
+              /<[^>]*style[^>]*display\s*:\s*none[^>]*>[\s\S]*?<\/[^>]+>/gi,
+              ""
+            )
+            // Remove elements with visibility:hidden
+            .replace(
+              /<[^>]*style[^>]*visibility\s*:\s*hidden[^>]*>[\s\S]*?<\/[^>]+>/gi,
+              ""
+            )
+            // Remove elements with opacity:0
+            .replace(
+              /<[^>]*style[^>]*opacity\s*:\s*0[^>]*>[\s\S]*?<\/[^>]+>/gi,
+              ""
+            )
+            // Remove elements with max-height:0
+            .replace(
+              /<[^>]*style[^>]*max-height\s*:\s*0[^>]*>[\s\S]*?<\/[^>]+>/gi,
+              ""
+            )
+            // Remove elements with font-size:1px or smaller
+            .replace(
+              /<[^>]*style[^>]*font-size\s*:\s*[01]px[^>]*>[\s\S]*?<\/[^>]+>/gi,
+              ""
+            )
+            // Remove elements with overflow:hidden combined with other hiding styles
+            .replace(
+              /<div[^>]*style[^>]*(?=.*overflow\s*:\s*hidden)(?=.*(?:display\s*:\s*none|visibility\s*:\s*hidden|opacity\s*:\s*0|max-height\s*:\s*0|font-size\s*:\s*[01]px))[^>]*>[\s\S]*?<\/div>/gi,
+              ""
+            );
+
+          // Extract text from remaining visible elements
+          const htmlStripped = htmlContent
+            // Remove HTML tags but keep the content inside them
             .replace(/<[^>]+>/g, " ")
+            // Decode HTML entities
             .replace(/&nbsp;/g, " ")
             .replace(/&amp;/g, "&")
             .replace(/&lt;/g, "<")
             .replace(/&gt;/g, ">")
             .replace(/&quot;/g, '"')
             .replace(/&#39;/g, "'")
+            .replace(/&#x27;/g, "'")
+            .replace(/&#x2F;/g, "/")
+            .replace(/&#x3D;/g, "=")
+            // Clean up whitespace but preserve line breaks for readability
             .replace(/\s+/g, " ")
             .trim();
+
           text += htmlStripped + "\n";
         }
+        // Skip text/plain parts entirely
       } catch (error) {
         console.error("Error decoding part:", error);
       }
@@ -404,7 +448,6 @@ function shouldExcludeEmail(
       return true;
     }
 
-    // Partial domain match (e.g., "noreply" matches any email containing "noreply")
     if (extractedEmail.includes(normalizedExcluded)) {
       return true;
     }
@@ -505,7 +548,17 @@ export async function POST(request: NextRequest) {
         const body = extractEmailBody(email.payload);
 
         // Prepare email text for classification (subject + body snippet)
-        const emailText = `${subject} ${body.substring(0, 1000)}`;
+        const emailText = `${subject} ${body.substring(0, 5000)}`;
+
+        // if (
+        //   subject.includes(
+        //     ""
+        //   )
+        // ) {
+        //   console.log("###################$###################");
+        //   console.log(emailText);
+        //   console.log("###################$###################");
+        // }
 
         emailsForClassification.push({
           text: emailText,
