@@ -6,7 +6,10 @@ export function Footer() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <div className="text-sm text-muted-foreground">
-            © 2025 Job Application Tracker. All rights reserved.
+            © 2025 CareerSync. All rights reserved.
+          </div>
+          <div className="text-sm text-muted-foreground">
+            🚀 Built by Tomiwa Jinadu | Made to elevate your experience
           </div>
           <div className="flex space-x-6 text-sm">
             <Link

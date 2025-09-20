@@ -59,17 +59,17 @@ export default function Analytics() {
     if (status === "offer") monthlyCounts[month].offers++;
   }
 
-  const totalApplications = applications.length;
+  const totalUpdates = applications.length;
   const interviewRate = (
-    ((statusCounts["interview"] || 0) / totalApplications) *
+    ((statusCounts["interview"] || 0) / statusCounts["applied"]) *
     100
   ).toFixed(1);
   const offerRate = (
-    ((statusCounts["offer"] || 0) / totalApplications) *
+    ((statusCounts["offer"] || 0) / statusCounts["applied"]) *
     100
   ).toFixed(1);
   const rejectionRate = (
-    ((statusCounts["rejected"] || 0) / totalApplications) *
+    ((statusCounts["rejected"] || 0) / statusCounts["applied"]) *
     100
   ).toFixed(1);
 
@@ -148,15 +148,11 @@ export default function Analytics() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Applications
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Updates</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl md:text-2xl font-bold">
-              {totalApplications}
-            </div>
+            <div className="text-xl md:text-2xl font-bold">{totalUpdates}</div>
           </CardContent>
         </Card>
         <Card>
