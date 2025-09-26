@@ -263,25 +263,6 @@ export default function ExportPage() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dateRange">Date Range</Label>
-                  <Select
-                    value={dateRange}
-                    onValueChange={(value: DateRange) => setDateRange(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Time</SelectItem>
-                      <SelectItem value="last30">Last 30 Days</SelectItem>
-                      <SelectItem value="last90">Last 90 Days</SelectItem>
-                      <SelectItem value="thisYear">This Year</SelectItem>
-                      <SelectItem value="lastYear">Last Year</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </CardContent>
             </Card>
 

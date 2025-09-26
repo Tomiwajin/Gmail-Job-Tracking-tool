@@ -16,7 +16,7 @@ import {
   FolderUp,
   BookOpen,
   UserCircleIcon,
-  LogOut,
+  RefreshCw,
 } from "lucide-react";
 import { SiGmail } from "react-icons/si";
 import React, { useState, useEffect } from "react";
@@ -50,7 +50,6 @@ const Appsidebar = () => {
   const [isGmailConnected, setIsGmailConnected] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
-  // Check Gmail authentication status
   useEffect(() => {
     const checkGmailAuth = async () => {
       try {
@@ -77,15 +76,17 @@ const Appsidebar = () => {
     }
   };
 
-  const handleLogout = async () => {
+  const handleSwitchAccount = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      setIsGmailConnected(false);
-      setUserEmail("");
+      const response = await fetch("/api/auth/logout", { method: "POST" });
 
-      window.location.href = "/updates";
+      if (response.ok) {
+        const authResponse = await fetch("/api/auth/gmail");
+        const { authUrl } = await authResponse.json();
+        window.location.href = authUrl;
+      }
     } catch (error) {
-      console.error("Failed to logout:", error);
+      console.error("Failed to switch account:", error);
     }
   };
 
@@ -94,18 +95,18 @@ const Appsidebar = () => {
       await fetch("/api/auth/logout", { method: "POST" });
       setIsGmailConnected(false);
       setUserEmail("");
+      window.location.reload();
     } catch (error) {
       console.error("Failed to disconnect:", error);
     }
   };
 
-  // Bottom menu items based on connection status
   const bottomMenuItems = isGmailConnected
     ? [
         {
-          title: "Disconnect Gmail",
-          action: handleDisconnect,
-          icon: SiGmail,
+          title: "Switch Account",
+          action: handleSwitchAccount,
+          icon: RefreshCw,
         },
         {
           title: "My Account",
@@ -113,9 +114,9 @@ const Appsidebar = () => {
           icon: UserCircleIcon,
         },
         {
-          title: "Log out",
-          action: handleLogout,
-          icon: LogOut,
+          title: "Disconnect",
+          action: handleDisconnect,
+          icon: SiGmail,
         },
       ]
     : [
@@ -146,7 +147,6 @@ const Appsidebar = () => {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Main Menu */}
         <SidebarGroup className="mt-6">
           <SidebarGroupContent>
             <SidebarMenu className="gap-6">
@@ -164,11 +164,10 @@ const Appsidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Connection Status Indicator (when connected) */}
         {isGmailConnected && userEmail && (
           <SidebarGroup className="mt-auto">
             <SidebarGroupContent>
-              <div className="mx-3 px-3 py-2 text-xs text-green-600 bg-green-50 rounded-md border border-green-200 group-data-[collapsible=icon]:mx-2 group-data-[collapsible=icon]:px-2">
+              <div className="mx-3 px-3 py-2 text-xs text-black bg-white rounded-md border border-green-200 group-data-[collapsible=icon]:mx-2 group-data-[collapsible=icon]:px-2">
                 <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
                   <span
@@ -183,9 +182,10 @@ const Appsidebar = () => {
           </SidebarGroup>
         )}
 
-        {/* Bottom Menu */}
         <SidebarGroup
-          className={!isGmailConnected || !userEmail ? "mt-auto" : ""}
+          className={
+            !isGmailConnected || !userEmail ? "mt-auto mb-10" : "mb-10"
+          }
         >
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
