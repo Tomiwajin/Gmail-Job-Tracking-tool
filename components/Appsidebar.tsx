@@ -26,7 +26,7 @@ import Image from "next/image";
 const mainMenuItems = [
   {
     title: "Job Updates",
-    url: "/",
+    url: "/updates",
     icon: Briefcase,
   },
   {
@@ -65,10 +65,6 @@ const Appsidebar = () => {
     };
 
     checkGmailAuth();
-
-    // Poll for auth status changes (check every 30 seconds)
-    const interval = setInterval(checkGmailAuth, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const handleGmailConnect = async () => {
@@ -86,8 +82,8 @@ const Appsidebar = () => {
       await fetch("/api/auth/logout", { method: "POST" });
       setIsGmailConnected(false);
       setUserEmail("");
-      // Redirect to home page
-      window.location.href = "/";
+
+      window.location.href = "/updates";
     } catch (error) {
       console.error("Failed to logout:", error);
     }
@@ -176,7 +172,7 @@ const Appsidebar = () => {
                 <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
                   <span
-                    className="group-data-[collapsible=icon]:hidden truncate"
+                    className="group-data-[collapsible=icon]:hidden"
                     title={`Connected: ${userEmail}`}
                   >
                     Connected: {userEmail}
@@ -195,22 +191,19 @@ const Appsidebar = () => {
             <SidebarMenu className="gap-2">
               {bottomMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild={!!item.url}>
-                    {item.url ? (
+                  {item.url ? (
+                    <SidebarMenuButton asChild>
                       <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
-                    ) : (
-                      <div
-                        onClick={item.action}
-                        className="w-full flex items-center"
-                      >
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </div>
-                    )}
-                  </SidebarMenuButton>
+                    </SidebarMenuButton>
+                  ) : (
+                    <SidebarMenuButton onClick={item.action}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

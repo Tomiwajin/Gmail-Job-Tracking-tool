@@ -28,14 +28,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex min-h-screen`}
       >
         <SidebarProvider>
-          <Appsidebar />
-          <main>
-            <SidebarTrigger />
-            {children}
-          </main>
+          <div className="grid grid-cols-[auto_1fr] flex-1 w-full">
+            <Appsidebar />
+            <main className="flex flex-col overflow-auto">{children}</main>
+          </div>
         </SidebarProvider>
         <Analytics />
       </body>
