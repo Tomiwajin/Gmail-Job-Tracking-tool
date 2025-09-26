@@ -29,6 +29,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { TrendingUp, Users, MailX, Target } from "lucide-react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function Analytics() {
   const applications = useApplicationStore((state) => state.applications);
@@ -108,20 +109,18 @@ export default function Analytics() {
 
   if (applications.length === 0) {
     return (
-      <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
-          <Link href="/">
-            <Button variant="outline" size="sm" className="w-fit">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Analytics</h1>
-            <p className="text-muted-foreground text-sm md:text-base">
-              No data available. Please visit the Dashboard to fetch analytics.
-            </p>
+      <div className="flex flex-col">
+        {/* Header Section */}
+        <div className="flex items-center justify-between p-4 border-b w-full">
+          <div className="flex items-center space-x-4">
+            <SidebarTrigger />
+            <h1 className="text-xl font-semibold">Analytics</h1>
           </div>
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-center p-6 text-center space-y-4">
+          <p className="text-muted-foreground text-sm md:text-base">
+            No data available. Please visit the Dashboard to fetch analytics.
+          </p>
         </div>
       </div>
     );
