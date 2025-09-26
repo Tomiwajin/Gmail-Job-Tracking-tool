@@ -107,9 +107,9 @@ export async function GET(request: NextRequest) {
       maxAge: 30 * 24 * 3600,
     });
 
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/updates", request.url));
   } catch (error) {
     console.error("OAuth callback error:", error);
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/updates", request.url));
   }
 }
