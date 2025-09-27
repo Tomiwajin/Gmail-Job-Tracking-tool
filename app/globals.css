@@ -84,3 +84,57 @@
     @apply bg-background text-foreground;
   }
 }
+
+.gradientText {
+  background: linear-gradient(135deg, white, #b3b3b3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glowEffect {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.glowEffect:hover {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+.heroGrid {
+  background-image: radial-gradient(
+      circle at 25% 25%,
+      rgba(255, 255, 255, 0.02) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 75% 75%,
+      rgba(255, 255, 255, 0.02) 0%,
+      transparent 50%
+    );
+}
+
+.animateFloat {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.featureCard {
+  background: #262626;
+  border: 1px solid #404040;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.featureCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+}
