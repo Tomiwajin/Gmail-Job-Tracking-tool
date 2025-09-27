@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import Appsidebar from "@/components/Sidebar/Appsidebar";
 import Visibility from "@/components/Sidebar/visibility";
 
@@ -32,12 +32,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex min-h-screen`}
       >
         <SidebarProvider>
-          <Visibility>
-            <div className="grid grid-cols-[auto_1fr] flex-1 w-full">
-              <Appsidebar />
-              <main className="flex flex-col overflow-auto">{children}</main>
-            </div>
-          </Visibility>
+          <Visibility>{children}</Visibility>
         </SidebarProvider>
         <Analytics />
       </body>
