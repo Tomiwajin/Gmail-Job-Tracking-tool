@@ -3,16 +3,9 @@
 import { useApplicationStore } from "@/lib/useApplicationStore";
 import { useExcludedEmails } from "@/hooks/useExcludedEmails";
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -35,16 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  CalendarIcon,
-  Search,
-  RefreshCw,
-  Mail,
-  ChevronDown,
-  ArrowUp,
-  X,
-  Calendar1,
-} from "lucide-react";
+import { CalendarIcon, Search, RefreshCw, Mail, ArrowUp } from "lucide-react";
 import { format, subDays, subMonths } from "date-fns";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -64,6 +48,7 @@ interface JobApplication {
   subject: string;
 }
 
+// API response format with string dates that need conversion
 interface ProcessedApplication {
   id: string;
   company: string;
@@ -82,6 +67,7 @@ interface DatePreset {
   };
 }
 
+// Status color mappings for consistent badge styling
 const statusColors = {
   applied: "bg-blue-100 text-blue-800",
   rejected: "bg-red-100 text-red-800",
@@ -91,42 +77,7 @@ const statusColors = {
   withdrawn: "bg-gray-100 text-gray-800",
 };
 
-// Helper function to check if email should be excluded
-function shouldExcludeEmail(
-  emailAddress: string,
-  excludedEmails: string[]
-): boolean {
-  if (!excludedEmails || excludedEmails.length === 0) {
-    return false;
-  }
-
-  const normalizedEmail = emailAddress.toLowerCase().trim();
-  const extractedEmail =
-    normalizedEmail.match(/<(.+)>/)?.[1] || normalizedEmail;
-
-  return excludedEmails.some((excludedEmail) => {
-    const normalizedExcluded = excludedEmail.toLowerCase().trim();
-
-    if (extractedEmail === normalizedExcluded) {
-      return true;
-    }
-
-    if (
-      normalizedExcluded.startsWith("@") &&
-      extractedEmail.endsWith(normalizedExcluded)
-    ) {
-      return true;
-    }
-
-    if (extractedEmail.includes(normalizedExcluded)) {
-      return true;
-    }
-
-    return false;
-  });
-}
-
-// Date range presets
+// Predefined date range options for quick filtering
 const datePresets: DatePreset[] = [
   {
     label: "Last 7 days",
@@ -159,24 +110,17 @@ const datePresets: DatePreset[] = [
 ];
 
 export default function HomePage() {
+  // Global state from Zustand store
   const updates = useApplicationStore((state) => state.applications);
   const addApplications = useApplicationStore((state) => state.addApplications);
-  const removeApplications = useApplicationStore(
-    (state) => state.removeApplications
-  );
   const startDate = useApplicationStore((state) => state.startDate);
   const endDate = useApplicationStore((state) => state.endDate);
   const setStartDate = useApplicationStore((state) => state.setStartDate);
   const setEndDate = useApplicationStore((state) => state.setEndDate);
 
-  const {
-    excludedEmails,
-    loading: excludedEmailsLoading,
-    error: excludedEmailsError,
-    addExcludedEmail,
-    removeExcludedEmail,
-  } = useExcludedEmails();
+  const { excludedEmails } = useExcludedEmails();
 
+  // Local component state
   const [filteredApplications, setFilteredApplications] = useState<
     JobApplication[]
   >([]);
@@ -184,74 +128,11 @@ export default function HomePage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGmailConnected, setIsGmailConnected] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [newExcludedEmail, setNewExcludedEmail] = useState("");
-  const [emailError, setEmailError] = useState<string | null>(null);
 
-  // Email validation function
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Add excluded email
-  const handleAddExcludedEmail = async () => {
-    const trimmedEmail = newExcludedEmail.trim().toLowerCase();
-
-    if (!trimmedEmail) {
-      setEmailError("Please enter an email address");
-      return;
-    }
-
-    if (
-      !validateEmail(trimmedEmail) &&
-      !trimmedEmail.startsWith("@") &&
-      trimmedEmail.length < 3
-    ) {
-      setEmailError("Please enter a valid email address or pattern");
-      return;
-    }
-
-    if (excludedEmails.includes(trimmedEmail)) {
-      setEmailError("This email is already in the exclusion list");
-      return;
-    }
-
-    const success = await addExcludedEmail(trimmedEmail);
-    if (success) {
-      setNewExcludedEmail("");
-      setEmailError(null);
-      // Filter out existing updates that match the exclusion
-      filterExistingApplications([...excludedEmails, trimmedEmail]);
-    } else {
-      setEmailError("Failed to save email exclusion");
-    }
-  };
-
-  // Remove excluded email
-  const handleRemoveExcludedEmail = async (emailToRemove: string) => {
-    await removeExcludedEmail(emailToRemove);
-  };
-
-  // Filter existing updates based on excluded emails
-  const filterExistingApplications = (excludedList: string[]) => {
-    const updatesToRemove = updates.filter((app) =>
-      shouldExcludeEmail(app.email, excludedList)
-    );
-
-    if (updatesToRemove.length > 0) {
-      const idsToRemove = updatesToRemove.map((app) => app.id);
-      removeApplications(idsToRemove);
-      console.log(
-        `Removed ${updatesToRemove.length} existing updates based on exclusion rules`
-      );
-    }
-  };
-
+  // Handle date preset selection
   const handlePresetClick = (preset: DatePreset) => {
     const { start, end } = preset.getValue();
     setStartDate(start);
@@ -267,8 +148,10 @@ export default function HomePage() {
     });
   };
 
+  // Filter applications based on search term, status, and date range
   useEffect(() => {
     let filtered = updates;
+
     if (searchTerm) {
       filtered = filtered.filter(
         (app) =>
@@ -277,19 +160,23 @@ export default function HomePage() {
           app.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
     if (statusFilter !== "all") {
       filtered = filtered.filter((app) => app.status === statusFilter);
     }
+
     if (startDate) {
       filtered = filtered.filter((app) => app.date >= startDate);
     }
+
     if (endDate) {
       filtered = filtered.filter((app) => app.date <= endDate);
     }
+
     setFilteredApplications(filtered);
   }, [updates, searchTerm, statusFilter, startDate, endDate]);
 
-  // Clear selected preset when dates are manually changed
+  // Clear preset selection when dates are manually changed
   useEffect(() => {
     const matchingPreset = datePresets.find((preset) => {
       const { start, end } = preset.getValue();
@@ -306,7 +193,7 @@ export default function HomePage() {
     }
   }, [startDate, endDate]);
 
-  // Handle scroll for back to top button
+  // Show/hide back to top button based on scroll position
   useEffect(() => {
     const handleScroll = () => {
       setShowBackToTop(window.scrollY > 200);
@@ -316,16 +203,21 @@ export default function HomePage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Process emails from Gmail API
   const handleProcessEmails = async () => {
     if (!startDate || !endDate) {
       setFormError("Please select a valid start and end date.");
       return;
     }
+
     setFormError(null);
+
     if (!isGmailConnected) {
       return;
     }
+
     setIsProcessing(true);
+
     try {
       const response = await fetch("/api/process-emails", {
         method: "POST",
@@ -336,14 +228,18 @@ export default function HomePage() {
           excludedEmails,
         }),
       });
+
       const result = await response.json();
+
       if (result.success && Array.isArray(result.applications)) {
+        // Convert string dates to Date objects for consistency
         const newAppsWithDateObjects = result.applications.map(
           (app: ProcessedApplication) => ({
             ...app,
             date: new Date(app.date),
           })
         );
+
         addApplications(newAppsWithDateObjects);
 
         if (result.excludedCount > 0) {
@@ -359,6 +255,7 @@ export default function HomePage() {
     }
   };
 
+  // Initiate Gmail OAuth flow
   const handleGmailLogin = async () => {
     try {
       const response = await fetch("/api/auth/gmail");
@@ -369,30 +266,30 @@ export default function HomePage() {
     }
   };
 
+  // Check Gmail authentication status on component mount
   useEffect(() => {
     const checkGmailAuth = async () => {
       try {
         const response = await fetch("/api/auth/status");
-        const { isAuthenticated, email } = await response.json();
+        const { isAuthenticated } = await response.json();
         setIsGmailConnected(isAuthenticated);
-        setUserEmail(email || "");
       } catch (error) {
         console.error("Failed to check auth status:", error);
       }
     };
+
     checkGmailAuth();
   }, []);
 
   return (
     <div className="flex flex-col">
-      {/* Header Section */}
+      {/* Header with title and action buttons */}
       <div className="flex items-center justify-between p-4 border-b w-full">
         <div className="flex items-center space-x-4">
           <SidebarTrigger />
           <h1 className="text-xl font-semibold">Dashboard</h1>
         </div>
         <div className="flex items-center gap-2">
-          {/* Process Emails Button */}
           {isGmailConnected && (
             <Button
               onClick={handleProcessEmails}
@@ -405,7 +302,6 @@ export default function HomePage() {
               {isProcessing ? "Processing..." : "Process Emails"}
             </Button>
           )}
-          {/* Gmail Connection Button (fallback) */}
           {!isGmailConnected && (
             <Button onClick={handleGmailLogin} size="sm">
               <Mail className="w-4 h-4 mr-2" />
@@ -415,9 +311,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Date Presets and Range Section */}
+      {/* Date filter controls */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border-b">
-        {/* Date Presets Section */}
+        {/* Date preset buttons */}
         <div className="flex flex-wrap gap-2">
           {datePresets.map((preset, index) => (
             <Button
@@ -435,11 +331,11 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Divider */}
+        {/* Visual separator */}
         <div className="hidden sm:block w-px h-8 bg-border"></div>
         <div className="sm:hidden w-full h-px bg-border"></div>
 
-        {/* Date Range Section */}
+        {/* Custom date range selectors */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 flex-1">
           <div className="flex-1">
             <Popover>
@@ -490,7 +386,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Form Error */}
         {formError && (
           <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">
             {formError}
@@ -498,9 +393,8 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Search and Filter Section */}
+      {/* Search and filter controls */}
       <div className="flex flex-col sm:flex-row gap-4 p-4 border-b">
-        {/* Search Input */}
         <div className="flex-1">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -514,7 +408,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Status Filter */}
         <div className="w-full sm:w-48">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
@@ -532,7 +425,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Applications Table Section */}
+      {/* Main content area */}
       <div className="flex-1 p-4">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">
@@ -543,7 +436,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Mobile card view for small screens */}
+        {/* Mobile card layout */}
         <div className="block md:hidden space-y-3">
           {filteredApplications.map((app) => (
             <Card key={app.id} className="p-3 shadow-sm">
@@ -585,6 +478,8 @@ export default function HomePage() {
               </div>
             </Card>
           ))}
+
+          {/* Empty state for mobile */}
           {filteredApplications.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <div className="space-y-3">
@@ -594,18 +489,12 @@ export default function HomePage() {
                     ? "Connect Gmail to get started!"
                     : "Try adjusting your filters or processing more emails."}
                 </p>
-                {!isGmailConnected && (
-                  <Button onClick={handleGmailLogin}>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Connect Gmail
-                  </Button>
-                )}
               </div>
             </div>
           )}
         </div>
 
-        {/* Desktop table view for md and above */}
+        {/* Desktop table layout */}
         <div className="hidden md:block rounded-md border">
           <Table>
             <TableHeader>
@@ -651,6 +540,8 @@ export default function HomePage() {
                   </TableCell>
                 </TableRow>
               ))}
+
+              {/* Empty state for desktop */}
               {filteredApplications.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-12">
@@ -670,7 +561,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Back to Top Button */}
+      {/* Floating back to top button */}
       {showBackToTop && (
         <Button
           onClick={scrollToTop}
