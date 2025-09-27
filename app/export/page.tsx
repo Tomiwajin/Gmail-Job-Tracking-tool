@@ -20,173 +20,210 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Download, FileText, Table, Code } from "lucide-react";
-import Link from "next/link";
+import {
+  Download,
+  Table,
+  Code,
+  BarChart3,
+  FileSpreadsheet,
+} from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { SpreadsheetExporter } from "@/lib/spreadsheet-export";
+import { DataExporter, type ExportData } from "@/lib/export-utils";
+import { format } from "date-fns";
+import { toast } from "@/hooks/use-toast";
 
-type ExportFormat = "csv" | "json" | "pdf";
-type DateRange = "all" | "last30" | "last90" | "thisYear" | "lastYear";
+type ExportFormat = "csv" | "json" | "xlsx" | "analytics";
+
+interface JobApplication {
+  id: string;
+  company: string;
+  role: string;
+  status: string;
+  email: string;
+  date: Date | string;
+  subject: string;
+}
+
+interface SelectedFields {
+  company: boolean;
+  role: boolean;
+  status: boolean;
+  email: boolean;
+  date: boolean;
+  subject: boolean;
+}
 
 export default function ExportPage() {
   const applications = useApplicationStore((state) => state.applications);
   const [fileName, setFileName] = useState("job-applications");
-  const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
-  const [dateRange, setDateRange] = useState<DateRange>("all");
-  const [selectedFields, setSelectedFields] = useState({
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("xlsx");
+  const [selectedFields, setSelectedFields] = useState<SelectedFields>({
     company: true,
-    position: true,
+    role: true,
     status: true,
+    email: true,
     date: true,
-    location: false,
-    salary: false,
-    notes: false,
+    subject: false,
   });
   const [isExporting, setIsExporting] = useState(false);
 
-  const getFilteredApplications = () => {
-    const now = new Date();
-    let filtered = applications;
-
-    switch (dateRange) {
-      case "last30":
-        const last30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        filtered = applications.filter((app) => new Date(app.date) >= last30);
-        break;
-      case "last90":
-        const last90 = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        filtered = applications.filter((app) => new Date(app.date) >= last90);
-        break;
-      case "thisYear":
-        const thisYear = now.getFullYear();
-        filtered = applications.filter(
-          (app) => new Date(app.date).getFullYear() === thisYear
-        );
-        break;
-      case "lastYear":
-        const lastYear = now.getFullYear() - 1;
-        filtered = applications.filter(
-          (app) => new Date(app.date).getFullYear() === lastYear
-        );
-        break;
-      default:
-        filtered = applications;
-    }
-
-    return filtered;
+  const getFilteredApplications = (): JobApplication[] => {
+    return applications;
   };
 
-  const exportToCSV = (data: any[]) => {
-    const headers = Object.keys(selectedFields)
-      .filter((field) => selectedFields[field as keyof typeof selectedFields])
-      .map((field) => field.charAt(0).toUpperCase() + field.slice(1));
+  const exportToCSV = async (data: JobApplication[]): Promise<void> => {
+    try {
+      const exportData: ExportData[] = data.map((app: JobApplication) => ({
+        company: selectedFields.company ? app.company : "",
+        role: selectedFields.role ? app.role : "",
+        status: selectedFields.status ? app.status : "",
+        email: selectedFields.email ? app.email : "",
+        date: selectedFields.date
+          ? format(new Date(app.date), "yyyy-MM-dd")
+          : "",
+        subject: selectedFields.subject ? app.subject : "",
+        appliedDate: selectedFields.date
+          ? format(new Date(app.date), "yyyy-MM-dd")
+          : "",
+        lastUpdate: format(new Date(), "yyyy-MM-dd"),
+      }));
 
-    const csvContent = [
-      headers.join(","),
-      ...data.map((app) =>
-        headers
-          .map((header) => {
-            const field = header.toLowerCase();
-            let value = app[field] || "";
-            // Escape quotes and wrap in quotes if contains comma
-            if (
-              typeof value === "string" &&
-              (value.includes(",") || value.includes('"'))
-            ) {
-              value = `"${value.replace(/"/g, '""')}"`;
-            }
-            return value;
-          })
-          .join(",")
-      ),
-    ].join("\n");
+      const csvContent = DataExporter.convertToCSV(exportData);
+      const filename = `${fileName}-${format(new Date(), "yyyy-MM-dd")}.csv`;
+      DataExporter.downloadCSV(csvContent, filename);
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${fileName}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const exportToJSON = (data: any[]) => {
-    const filteredData = data.map((app) => {
-      const filtered: any = {};
-      Object.keys(selectedFields).forEach((field) => {
-        if (selectedFields[field as keyof typeof selectedFields]) {
-          filtered[field] = app[field];
-        }
+      toast({
+        title: "CSV Downloaded!",
+        description: `Downloaded ${exportData.length} applications as CSV file`,
       });
-      return filtered;
-    });
-
-    const jsonContent = JSON.stringify(filteredData, null, 2);
-    const blob = new Blob([jsonContent], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${fileName}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("CSV export failed:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export data as CSV",
+        variant: "destructive",
+      });
+    }
   };
 
-  const exportToPDF = async (data: any[]) => {
-    // Simple text-based PDF export (in a real app, you'd use a PDF library like jsPDF)
-    const content = [
-      `Job Applications Export - ${new Date().toLocaleDateString()}`,
-      `Total Records: ${data.length}`,
-      "",
-      ...data.map((app, index) =>
-        [
-          `Application ${index + 1}:`,
-          ...Object.keys(selectedFields)
-            .filter(
-              (field) => selectedFields[field as keyof typeof selectedFields]
-            )
-            .map(
-              (field) =>
-                `  ${field.charAt(0).toUpperCase() + field.slice(1)}: ${
-                  app[field] || "N/A"
-                }`
-            ),
-          "",
-        ].join("\n")
-      ),
-    ].join("\n");
+  const exportToJSON = (data: JobApplication[]): void => {
+    try {
+      const filteredData = data.map((app) => {
+        const filtered: Record<string, string | Date> = {};
+        Object.keys(selectedFields).forEach((field) => {
+          const fieldKey = field as keyof SelectedFields;
+          if (selectedFields[fieldKey]) {
+            const appValue = app[fieldKey as keyof JobApplication];
+            if (fieldKey === "date" && appValue) {
+              filtered[fieldKey] = format(
+                new Date(appValue as string | Date),
+                "yyyy-MM-dd"
+              );
+            } else {
+              filtered[fieldKey] = appValue as string | Date;
+            }
+          }
+        });
+        return filtered;
+      });
 
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${fileName}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
+      const jsonContent = JSON.stringify(filteredData, null, 2);
+      const blob = new Blob([jsonContent], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${fileName}-${format(new Date(), "yyyy-MM-dd")}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "JSON Downloaded!",
+        description: `Downloaded ${filteredData.length} applications as JSON file`,
+      });
+    } catch (error) {
+      console.error("JSON export failed:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export data as JSON",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleExport = async () => {
+  const exportToSpreadsheet = async (data: JobApplication[]): Promise<void> => {
+    try {
+      const filename = `${fileName}-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      await SpreadsheetExporter.downloadTrueExcelFile(data, filename);
+
+      toast({
+        title: "Spreadsheet Downloaded!",
+        description: `Downloaded ${data.length} applications as Excel file`,
+      });
+    } catch (error) {
+      console.error("Spreadsheet export failed:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to download spreadsheet file",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const exportToAnalytics = async (data: JobApplication[]): Promise<void> => {
+    try {
+      const filename = `${fileName}-analytics-${format(
+        new Date(),
+        "yyyy-MM-dd"
+      )}.xlsx`;
+      SpreadsheetExporter.downloadAnalyticsSpreadsheet(data, filename);
+
+      toast({
+        title: "Analytics Spreadsheet Downloaded!",
+        description: `Downloaded comprehensive analytics with ${data.length} applications`,
+      });
+    } catch (error) {
+      console.error("Analytics export failed:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to download analytics spreadsheet",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExport = async (): Promise<void> => {
     setIsExporting(true);
     const filteredData = getFilteredApplications();
 
     try {
       switch (exportFormat) {
         case "csv":
-          exportToCSV(filteredData);
+          await exportToCSV(filteredData);
           break;
         case "json":
           exportToJSON(filteredData);
           break;
-        case "pdf":
-          await exportToPDF(filteredData);
+        case "xlsx":
+          await exportToSpreadsheet(filteredData);
+          break;
+        case "analytics":
+          await exportToAnalytics(filteredData);
           break;
       }
     } catch (error) {
       console.error("Export failed:", error);
+      toast({
+        title: "Export Failed",
+        description: "An error occurred during export",
+        variant: "destructive",
+      });
     } finally {
       setIsExporting(false);
     }
   };
 
-  const handleFieldChange = (field: keyof typeof selectedFields) => {
+  const handleFieldChange = (field: keyof SelectedFields): void => {
     setSelectedFields((prev) => ({
       ...prev,
       [field]: !prev[field],
@@ -197,7 +234,6 @@ export default function ExportPage() {
 
   return (
     <div className="flex flex-col">
-      {/* Header Section */}
       <div className="flex items-center justify-between p-4 border-b w-full">
         <div className="flex items-center space-x-4">
           <SidebarTrigger />
@@ -207,9 +243,7 @@ export default function ExportPage() {
 
       <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* Export Settings */}
           <div className="lg:col-span-2 space-y-6">
-            {/* File Settings */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg md:text-xl">
@@ -242,6 +276,18 @@ export default function ExportPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="xlsx">
+                        <div className="flex items-center space-x-2">
+                          <FileSpreadsheet className="w-4 h-4" />
+                          <span>Excel Spreadsheet (.xlsx)</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="analytics">
+                        <div className="flex items-center space-x-2">
+                          <BarChart3 className="w-4 h-4" />
+                          <span>Analytics Spreadsheet</span>
+                        </div>
+                      </SelectItem>
                       <SelectItem value="csv">
                         <div className="flex items-center space-x-2">
                           <Table className="w-4 h-4" />
@@ -254,19 +300,12 @@ export default function ExportPage() {
                           <span>JSON (Developer friendly)</span>
                         </div>
                       </SelectItem>
-                      <SelectItem value="pdf">
-                        <div className="flex items-center space-x-2">
-                          <FileText className="w-4 h-4" />
-                          <span>Text File (Readable format)</span>
-                        </div>
-                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Field Selection */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg md:text-xl">
@@ -284,9 +323,7 @@ export default function ExportPage() {
                         id={field}
                         checked={checked}
                         onCheckedChange={() =>
-                          handleFieldChange(
-                            field as keyof typeof selectedFields
-                          )
+                          handleFieldChange(field as keyof SelectedFields)
                         }
                       />
                       <Label
@@ -302,7 +339,6 @@ export default function ExportPage() {
             </Card>
           </div>
 
-          {/* Export Preview */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg md:text-xl">
@@ -353,39 +389,45 @@ export default function ExportPage() {
 
               {filteredCount === 0 && (
                 <p className="text-sm text-muted-foreground text-center">
-                  No records match the selected date range.
+                  No records available for export.
                 </p>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Export Tips */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg md:text-xl">Export Tips</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+              <div>
+                <h4 className="font-medium mb-2">Excel Spreadsheet</h4>
+                <p className="text-muted-foreground">
+                  Full-featured Excel file with proper formatting and data
+                  types.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Analytics Spreadsheet</h4>
+                <p className="text-muted-foreground">
+                  Includes summary statistics, charts, and detailed application
+                  data.
+                </p>
+              </div>
               <div>
                 <h4 className="font-medium mb-2">CSV Format</h4>
                 <p className="text-muted-foreground">
-                  Best for spreadsheet applications like Excel, Google Sheets,
-                  or data analysis tools.
+                  Simple format compatible with Excel, Google Sheets, and
+                  analysis tools.
                 </p>
               </div>
               <div>
                 <h4 className="font-medium mb-2">JSON Format</h4>
                 <p className="text-muted-foreground">
-                  Ideal for developers, data migration, or integration with
-                  other applications.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-medium mb-2">Text Format</h4>
-                <p className="text-muted-foreground">
-                  Human-readable format that can be opened in any text editor or
-                  printed.
+                  Developer-friendly format for data migration and API
+                  integration.
                 </p>
               </div>
             </div>
