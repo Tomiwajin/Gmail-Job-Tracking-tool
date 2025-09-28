@@ -21,7 +21,6 @@ interface ClassificationResult {
   success?: boolean;
 }
 
-// Define proper type for email metadata
 interface EmailMetadata {
   from: string;
   subject: string;
@@ -30,11 +29,31 @@ interface EmailMetadata {
   snippet: string;
 }
 
-// Function to classify email using your deployed HuggingFace Space with Gradio Client
+function sendProgress(
+  encoder: TextEncoder,
+  controller: ReadableStreamDefaultController,
+  stage: string,
+  current: number,
+  total: number
+) {
+  const progress = {
+    type: "progress",
+    stage,
+    current,
+    total,
+    percentage: Math.round((current / total) * 100),
+  };
+
+  const data = `data: ${JSON.stringify(progress)}\n\n`;
+  controller.enqueue(encoder.encode(data));
+}
+
 async function classifyEmail(emailText: string): Promise<ClassificationResult> {
   try {
-    const spaceUrl =
-      process.env.HUGGINGFACE_SPACE_URL || "Tomiwajin/Email-Classifier";
+    const spaceUrl = process.env.HUGGINGFACE_SPACE_URL;
+    if (!spaceUrl) {
+      throw new Error("HuggingFace Space URL not configured");
+    }
 
     const client = await Client.connect(spaceUrl);
     const result = await client.predict("/api_classify", {
@@ -42,8 +61,6 @@ async function classifyEmail(emailText: string): Promise<ClassificationResult> {
     });
 
     const classificationData = result.data;
-
-    // Parse the JSON response if it's a string
     const parsedResult =
       typeof classificationData === "string"
         ? JSON.parse(classificationData)
@@ -58,8 +75,7 @@ async function classifyEmail(emailText: string): Promise<ClassificationResult> {
       score: parsedResult.score,
       success: true,
     };
-  } catch (error) {
-    console.error("Classification error:", error);
+  } catch {
     return {
       label: "other",
       score: 0,
@@ -68,45 +84,39 @@ async function classifyEmail(emailText: string): Promise<ClassificationResult> {
   }
 }
 
-// Batch classification function with proper batch size handling
 async function classifyEmailsBatch(
-  emails: Array<{ text: string; id: string }>
+  emails: Array<{ text: string; id: string }>,
+  progressCallback?: (current: number, total: number) => void
 ): Promise<Map<string, ClassificationResult>> {
   const results = new Map<string, ClassificationResult>();
   const maxBatchSize = 100;
+
   try {
-    const spaceUrl =
-      process.env.HUGGINGFACE_SPACE_URL || "Tomiwajin/Email-Classifier";
+    const spaceUrl = process.env.HUGGINGFACE_SPACE_URL;
+    if (!spaceUrl) {
+      throw new Error("HuggingFace Space URL not configured");
+    }
 
     const client = await Client.connect(spaceUrl);
 
-    // Process emails in chunks of maxBatchSize
     for (let i = 0; i < emails.length; i += maxBatchSize) {
       const batch = emails.slice(i, i + maxBatchSize);
 
-      console.log(
-        `Processing batch ${Math.floor(i / maxBatchSize) + 1}/${Math.ceil(
-          emails.length / maxBatchSize
-        )} (${batch.length} emails)`
-      );
+      if (progressCallback) {
+        progressCallback(i, emails.length);
+      }
 
-      // Extract just the email texts for batch processing
       const emailTexts = batch.map((email) => email.text);
       const emailTextsJson = JSON.stringify(emailTexts);
 
-      // Use the /api_classify_batch endpoint
       const result = await client.predict("/api_classify_batch", {
         emails_json: emailTextsJson,
       });
 
       const batchDataString = result.data as string;
-
-      // Parse the JSON string returned by your batch function
       const batchData = JSON.parse(batchDataString);
 
-      // Handle the response structure from your Space
       if (batchData.results && Array.isArray(batchData.results)) {
-        // Map results back to email IDs
         batch.forEach((email, index) => {
           const result = batchData.results[index];
           if (result && result.success && result.label) {
@@ -127,22 +137,25 @@ async function classifyEmailsBatch(
         throw new Error(batchData.error || "Invalid batch response format");
       }
 
-      // Add a small delay between batches to avoid overwhelming the service
       if (i + maxBatchSize < emails.length) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
-  } catch (error) {
-    console.error("Batch classification error:", error);
 
-    // Fallback to individual classifications if batch fails
-    console.log("Falling back to individual classifications...");
-
+    if (progressCallback) {
+      progressCallback(emails.length, emails.length);
+    }
+  } catch {
+    // Fallback to individual classifications
     const batchSize = 5;
     const delay = 1000;
 
     for (let i = 0; i < emails.length; i += batchSize) {
       const batch = emails.slice(i, i + batchSize);
+
+      if (progressCallback) {
+        progressCallback(i, emails.length);
+      }
 
       const batchPromises = batch.map(async (email) => {
         const classification = await classifyEmail(email.text);
@@ -159,12 +172,15 @@ async function classifyEmailsBatch(
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
+
+    if (progressCallback) {
+      progressCallback(emails.length, emails.length);
+    }
   }
 
   return results;
 }
 
-//extract role and company data using regex
 function extractJobData(emailContent: string) {
   const lines = emailContent.split("\n");
   const subject =
@@ -173,7 +189,6 @@ function extractJobData(emailContent: string) {
       ?.replace("Subject:", "")
       .trim() || "";
 
-  // Role extraction patterns
   const rolePatterns = [
     /your job application for\s+([^.,!?\n\r]+)/i,
     /Job Title:\s*\*?\*?([^*\n\r]+?)(?:Location:|Business Unit:|\*?\*?\s*$)/i,
@@ -224,7 +239,6 @@ function extractJobData(emailContent: string) {
       const isGeneric =
         candidateRole.match(/^(role|position|job)$/i) ||
         genericPhrases.test(candidateRole);
-
       const isFragment =
         /\b(we|you|think|cool|place|awesome|excited|super|can't|wait|be|part|of|team|member|join|joining|work|with)\b/i.test(
           candidateRole
@@ -237,9 +251,7 @@ function extractJobData(emailContent: string) {
     }
   }
 
-  // Company extraction patterns
   const companyPatterns = [
-    //Bottom then top regex
     /Sincerely,\s*([A-Z][^,\n\r]*?)\s+Talent Acquisition/i,
     /message from\s+([A-Za-z][A-Za-z\s]+)/i,
     /^([^-]+?)\s*-\s*Thank You for Applying/i,
@@ -278,7 +290,7 @@ function extractJobData(emailContent: string) {
 
   let company = "Unknown";
 
-  // First try patterns on the subject line
+  // Extract company from subject line first
   for (const pattern of companyPatterns) {
     const match = subject.match(pattern);
     if (match && match[1] && match[1].trim().length > 0) {
@@ -287,16 +299,14 @@ function extractJobData(emailContent: string) {
         .replace(/\b(?:the|a|an)\b/gi, "")
         .trim();
 
-      // Check if the company name is 22 characters or less and not empty
       if (candidateCompany.length > 0 && candidateCompany.length <= 22) {
         company = candidateCompany;
         break;
       }
-      // If longer than 22 characters, continue to try next pattern
     }
   }
 
-  // If no suitable company found in subject, try the full email content
+  // Fallback to full email content
   if (company === "Unknown") {
     for (const pattern of companyPatterns) {
       const match = emailContent.match(pattern);
@@ -306,80 +316,60 @@ function extractJobData(emailContent: string) {
           .replace(/\b(?:the|a|an)\b/gi, "")
           .trim();
 
-        // Check if the company name is 22 characters or less and not empty
         if (candidateCompany.length > 0 && candidateCompany.length <= 22) {
           company = candidateCompany;
           break;
         }
-        // If longer than 22 characters, continue to try next pattern
       }
     }
   }
 
-  return {
-    role: role,
-    company: company,
-  };
+  return { role, company };
 }
 
-// Updated email body extraction function that only processes HTML and excludes hidden text
 function extractEmailBody(payload: gmail_v1.Schema$MessagePart): string {
   let body = "";
 
-  // Recursive function to extract text from nested parts
   const extractFromPart = (part: gmail_v1.Schema$MessagePart): string => {
     let text = "";
 
-    // Check if this part has body data
     if (part.body?.data) {
       try {
         const decoded = Buffer.from(part.body.data, "base64").toString("utf-8");
 
-        // Only process HTML content, skip text/plain
         if (part.mimeType?.includes("text/html")) {
-          // Remove script and style tags completely
           let htmlContent = decoded
             .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
             .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
 
-          // Remove hidden elements and their content based on common hiding patterns
           htmlContent = htmlContent
-            // Remove elements with display:none
             .replace(
               /<[^>]*style[^>]*display\s*:\s*none[^>]*>[\s\S]*?<\/[^>]+>/gi,
               ""
             )
-            // Remove elements with visibility:hidden
             .replace(
               /<[^>]*style[^>]*visibility\s*:\s*hidden[^>]*>[\s\S]*?<\/[^>]+>/gi,
               ""
             )
-            // Remove elements with opacity:0
             .replace(
               /<[^>]*style[^>]*opacity\s*:\s*0[^>]*>[\s\S]*?<\/[^>]+>/gi,
               ""
             )
-            // Remove elements with max-height:0
             .replace(
               /<[^>]*style[^>]*max-height\s*:\s*0[^>]*>[\s\S]*?<\/[^>]+>/gi,
               ""
             )
-            // Remove elements with font-size:1px or smaller
             .replace(
               /<[^>]*style[^>]*font-size\s*:\s*[01]px[^>]*>[\s\S]*?<\/[^>]+>/gi,
               ""
             )
-            // Remove elements with overflow:hidden combined with other hiding styles
             .replace(
               /<div[^>]*style[^>]*(?=.*overflow\s*:\s*hidden)(?=.*(?:display\s*:\s*none|visibility\s*:\s*hidden|opacity\s*:\s*0|max-height\s*:\s*0|font-size\s*:\s*[01]px))[^>]*>[\s\S]*?<\/div>/gi,
               ""
             );
 
-          // Extract text from remaining visible elements
           const htmlStripped = htmlContent
-            // Remove HTML tags but keep the content inside them
             .replace(/<[^>]+>/g, " ")
-            // Decode HTML entities
             .replace(/&nbsp;/g, " ")
             .replace(/&amp;/g, "&")
             .replace(/&lt;/g, "<")
@@ -389,19 +379,16 @@ function extractEmailBody(payload: gmail_v1.Schema$MessagePart): string {
             .replace(/&#x27;/g, "'")
             .replace(/&#x2F;/g, "/")
             .replace(/&#x3D;/g, "=")
-            // Clean up whitespace but preserve line breaks for readability
             .replace(/\s+/g, " ")
             .trim();
 
           text += htmlStripped + "\n";
         }
-        // Skip text/plain parts entirely
-      } catch (error) {
-        console.error("Error decoding part:", error);
+      } catch {
+        // Skip malformed email parts
       }
     }
 
-    // Recursively process nested parts
     if (part.parts && Array.isArray(part.parts)) {
       for (const subPart of part.parts) {
         text += extractFromPart(subPart);
@@ -411,13 +398,10 @@ function extractEmailBody(payload: gmail_v1.Schema$MessagePart): string {
     return text;
   };
 
-  // Start with the main payload
   body = extractFromPart(payload);
-
   return body.trim();
 }
 
-// Helper function to check if email should be excluded
 function shouldExcludeEmail(
   emailAddress: string,
   excludedEmails: string[]
@@ -427,20 +411,16 @@ function shouldExcludeEmail(
   }
 
   const normalizedEmail = emailAddress.toLowerCase().trim();
-
-  // Extract email from format "Name <email@domain.com>"
   const extractedEmail =
     normalizedEmail.match(/<(.+)>/)?.[1] || normalizedEmail;
 
   return excludedEmails.some((excludedEmail) => {
     const normalizedExcluded = excludedEmail.toLowerCase().trim();
 
-    // Exact match
     if (extractedEmail === normalizedExcluded) {
       return true;
     }
 
-    // Domain match (e.g., exclude all emails from @noreply.company.com)
     if (
       normalizedExcluded.startsWith("@") &&
       extractedEmail.endsWith(normalizedExcluded)
@@ -456,221 +436,360 @@ function shouldExcludeEmail(
   });
 }
 
-// POST function with model-based status classification
 export async function POST(request: NextRequest) {
-  try {
-    const {
-      startDate,
-      endDate,
-      excludedEmails = [],
-      classificationThreshold = 0.5,
-      jobLabels = ["applied", "rejected", "interview", "next-step", "offer"],
-    } = await request.json();
+  const encoder = new TextEncoder();
 
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("gmail_access_token")?.value;
-    const refreshToken = cookieStore.get("gmail_refresh_token")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
-    );
-
-    oauth2Client.setCredentials({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-
-    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-
-    // Fetch all emails in the date range
-    const query = `category:primary after:${Math.floor(
-      new Date(startDate).getTime() / 1000
-    )} before:${Math.floor(new Date(endDate).getTime() / 1000)}`;
-
-    const allMessages: gmail_v1.Schema$Message[] = [];
-    let pageToken: string | undefined = undefined;
-
-    console.log("Fetching emails from Gmail...");
-
-    do {
-      const response: { data: gmail_v1.Schema$ListMessagesResponse } =
-        await gmail.users.messages.list({
-          userId: "me",
-          q: query,
-          maxResults: 100,
-          pageToken,
-        });
-
-      const fetchedMessages = response.data.messages || [];
-      allMessages.push(...fetchedMessages);
-      pageToken = response.data.nextPageToken || undefined;
-    } while (pageToken);
-
-    console.log(
-      `Found ${allMessages.length} emails. Processing for classification...`
-    );
-
-    const emailsForClassification: Array<{
-      text: string;
-      id: string;
-      metadata: EmailMetadata;
-    }> = [];
-    const excludedCount = { excluded: 0 };
-
-    // Process emails and prepare for classification
-    for (const message of allMessages) {
+  const stream = new ReadableStream({
+    async start(controller) {
       try {
-        const emailResponse = await gmail.users.messages.get({
-          userId: "me",
-          id: message.id!,
-          format: "full",
-        });
+        const {
+          startDate,
+          endDate,
+          excludedEmails = [],
+          classificationThreshold = 0.5,
+          jobLabels = [
+            "applied",
+            "rejected",
+            "interview",
+            "next-step",
+            "offer",
+          ],
+        } = await request.json();
 
-        const email = emailResponse.data as GmailMessage;
-        const headers = email.payload.headers || [];
+        // Validate required environment variables
+        const requiredEnvVars = [
+          "GOOGLE_CLIENT_ID",
+          "GOOGLE_CLIENT_SECRET",
+          "GOOGLE_REDIRECT_URI",
+          "HUGGINGFACE_SPACE_URL",
+        ];
 
-        const from = headers.find((h) => h.name === "From")?.value || "";
-        const subject = headers.find((h) => h.name === "Subject")?.value || "";
-        const date = new Date(Number.parseInt(email.internalDate));
-
-        // Check if this email should be excluded
-        if (shouldExcludeEmail(from, excludedEmails)) {
-          excludedCount.excluded++;
-          continue;
+        for (const envVar of requiredEnvVars) {
+          if (!process.env[envVar]) {
+            const error = {
+              type: "error",
+              message: `Server configuration error: ${envVar} not configured`,
+            };
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify(error)}\n\n`)
+            );
+            controller.close();
+            return;
+          }
         }
 
-        const body = extractEmailBody(email.payload);
+        // Validate input parameters
+        if (!startDate || !endDate) {
+          const error = {
+            type: "error",
+            message: "Start date and end date are required",
+          };
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(error)}\n\n`)
+          );
+          controller.close();
+          return;
+        }
 
-        // Prepare email text for classification (subject + body snippet)
-        const emailText = `${subject} ${body.substring(0, 5000)}`;
+        const startDateObj = new Date(startDate);
+        const endDateObj = new Date(endDate);
 
-        // if (
-        //   subject.includes(
-        //     ""
-        //   )
-        // ) {
-        //   console.log("###################$###################");
-        //   console.log(emailText);
-        //   console.log("###################$###################");
-        // }
+        if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+          const error = { type: "error", message: "Invalid date format" };
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(error)}\n\n`)
+          );
+          controller.close();
+          return;
+        }
 
-        emailsForClassification.push({
-          text: emailText,
-          id: message.id!,
-          metadata: {
-            from,
-            subject,
-            date,
-            body,
-            snippet: email.snippet || "",
-          },
-        });
-      } catch (emailError) {
-        console.error("Error processing email for classification:", emailError);
-        continue;
-      }
-    }
+        if (startDateObj >= endDateObj) {
+          const error = {
+            type: "error",
+            message: "Start date must be before end date",
+          };
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(error)}\n\n`)
+          );
+          controller.close();
+          return;
+        }
 
-    console.log(
-      `Classifying ${emailsForClassification.length} emails using your HuggingFace Space...`
-    );
+        // Validate authentication
+        const cookieStore = await cookies();
+        const accessToken = cookieStore.get("gmail_access_token")?.value;
+        const refreshToken = cookieStore.get("gmail_refresh_token")?.value;
 
-    // Classify all emails using your deployed HuggingFace Space
-    const classifications = await classifyEmailsBatch(emailsForClassification);
+        if (!accessToken) {
+          const error = { type: "error", message: "Authentication required" };
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(error)}\n\n`)
+          );
+          controller.close();
+          return;
+        }
 
-    console.log("Classification completed. Processing job-related emails...");
+        sendProgress(encoder, controller, "Connecting to Gmail", 0, 100);
 
-    const processedApplications = [];
-    let classifiedAsJob = 0;
-    let classificationErrors = 0;
-
-    // Process only emails classified as job-related
-    for (const emailData of emailsForClassification) {
-      const classification = classifications.get(emailData.id);
-
-      if (!classification || !classification.success) {
-        classificationErrors++;
-        continue;
-      }
-
-      // Check if classification.label exists and is valid
-      if (!classification.label || typeof classification.label !== "string") {
-        console.warn(
-          `Invalid or missing label for email ${emailData.id}:`,
-          classification
+        const oauth2Client = new google.auth.OAuth2(
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET,
+          process.env.GOOGLE_REDIRECT_URI
         );
-        classificationErrors++;
-        continue;
-      }
 
-      // Check if email is classified as job-related based on your model's labels
-      const isJobRelated =
-        jobLabels.includes(classification.label.toLowerCase()) &&
-        classification.score >= classificationThreshold;
-
-      if (isJobRelated) {
-        classifiedAsJob++;
-
-        // Extract job details using regex
-        const { from, subject, date, body, snippet } = emailData.metadata;
-
-        // Enhanced email content with more context
-        const emailContent = `From: ${from}\nSubject: ${subject}\nSnippet: ${snippet}\nBody: ${body}`;
-
-        const jobData = extractJobData(emailContent);
-
-        processedApplications.push({
-          id: `gmail-${emailData.id}`,
-          company: jobData.company || "Unknown",
-          role: jobData.role || "Unknown",
-          status: classification.label.toLowerCase(),
-          email: from.match(/<(.+)>/)?.[1] || from,
-          date: date.toISOString(),
-          subject: subject,
-          bodyPreview: body.substring(0, 200),
-          classification: {
-            label: classification.label,
-            confidence: classification.score,
-          },
+        oauth2Client.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken,
         });
+
+        const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+
+        sendProgress(encoder, controller, "Fetching emails", 5, 100);
+
+        const query = `category:primary after:${Math.floor(
+          startDateObj.getTime() / 1000
+        )} before:${Math.floor(endDateObj.getTime() / 1000)}`;
+
+        const allMessages: gmail_v1.Schema$Message[] = [];
+        let pageToken: string | undefined = undefined;
+
+        do {
+          const response: { data: gmail_v1.Schema$ListMessagesResponse } =
+            await gmail.users.messages.list({
+              userId: "me",
+              q: query,
+              maxResults: 100,
+              pageToken,
+            });
+
+          const fetchedMessages = response.data.messages || [];
+          allMessages.push(...fetchedMessages);
+          pageToken = response.data.nextPageToken || undefined;
+
+          const fetchProgress = Math.min(
+            15,
+            5 + (allMessages.length / 100) * 10
+          );
+          sendProgress(
+            encoder,
+            controller,
+            `Fetching emails (${allMessages.length} found)`,
+            fetchProgress,
+            100
+          );
+        } while (pageToken);
+
+        sendProgress(
+          encoder,
+          controller,
+          `Found ${allMessages.length} emails, processing...`,
+          20,
+          100
+        );
+
+        const emailsForClassification: Array<{
+          text: string;
+          id: string;
+          metadata: EmailMetadata;
+        }> = [];
+        const excludedCount = { excluded: 0 };
+
+        let processedCount = 0;
+        for (const message of allMessages) {
+          try {
+            const emailResponse = await gmail.users.messages.get({
+              userId: "me",
+              id: message.id!,
+              format: "full",
+            });
+
+            const email = emailResponse.data as GmailMessage;
+            const headers = email.payload.headers || [];
+
+            const from = headers.find((h) => h.name === "From")?.value || "";
+            const subject =
+              headers.find((h) => h.name === "Subject")?.value || "";
+            const date = new Date(Number.parseInt(email.internalDate));
+
+            if (shouldExcludeEmail(from, excludedEmails)) {
+              excludedCount.excluded++;
+              continue;
+            }
+
+            const body = extractEmailBody(email.payload);
+            const emailText = `${subject} ${body.substring(0, 5000)}`;
+
+            emailsForClassification.push({
+              text: emailText,
+              id: message.id!,
+              metadata: {
+                from,
+                subject,
+                date,
+                body,
+                snippet: email.snippet || "",
+              },
+            });
+
+            processedCount++;
+
+            if (
+              processedCount % 10 === 0 ||
+              processedCount === allMessages.length
+            ) {
+              const progress = 20 + (processedCount / allMessages.length) * 30;
+              sendProgress(
+                encoder,
+                controller,
+                `Processing email content (${processedCount}/${allMessages.length})`,
+                progress,
+                100
+              );
+            }
+          } catch {
+            continue;
+          }
+        }
+
+        sendProgress(
+          encoder,
+          controller,
+          "Starting email classification",
+          50,
+          100
+        );
+
+        const classifications = await classifyEmailsBatch(
+          emailsForClassification,
+          (current, total) => {
+            const progress = 50 + (current / total) * 30;
+            sendProgress(
+              encoder,
+              controller,
+              `Classifying emails (${current}/${total})`,
+              progress,
+              100
+            );
+          }
+        );
+
+        sendProgress(
+          encoder,
+          controller,
+          "Processing job applications",
+          80,
+          100
+        );
+
+        const processedApplications = [];
+        let classifiedAsJob = 0;
+        let classificationErrors = 0;
+
+        let jobProcessedCount = 0;
+        for (const emailData of emailsForClassification) {
+          const classification = classifications.get(emailData.id);
+
+          if (!classification || !classification.success) {
+            classificationErrors++;
+            continue;
+          }
+
+          if (
+            !classification.label ||
+            typeof classification.label !== "string"
+          ) {
+            classificationErrors++;
+            continue;
+          }
+
+          const isJobRelated =
+            jobLabels.includes(classification.label.toLowerCase()) &&
+            classification.score >= classificationThreshold;
+
+          if (isJobRelated) {
+            classifiedAsJob++;
+
+            const { from, subject, date, body, snippet } = emailData.metadata;
+            const emailContent = `From: ${from}\nSubject: ${subject}\nSnippet: ${snippet}\nBody: ${body}`;
+            const jobData = extractJobData(emailContent);
+
+            processedApplications.push({
+              id: `gmail-${emailData.id}`,
+              company: jobData.company || "Unknown",
+              role: jobData.role || "Unknown",
+              status: classification.label.toLowerCase(),
+              email: from.match(/<(.+)>/)?.[1] || from,
+              date: date.toISOString(),
+              subject: subject,
+              bodyPreview: body.substring(0, 200),
+              classification: {
+                label: classification.label,
+                confidence: classification.score,
+              },
+            });
+
+            jobProcessedCount++;
+
+            if (
+              jobProcessedCount % 5 === 0 ||
+              jobProcessedCount === classifiedAsJob
+            ) {
+              const progress =
+                80 + (jobProcessedCount / Math.max(classifiedAsJob, 1)) * 15;
+              sendProgress(
+                encoder,
+                controller,
+                `Processing job data (${jobProcessedCount}/${classifiedAsJob})`,
+                progress,
+                100
+              );
+            }
+          }
+        }
+
+        sendProgress(encoder, controller, "Complete!", 100, 100);
+
+        const result = {
+          type: "complete",
+          success: true,
+          processed: processedApplications.length,
+          applications: processedApplications,
+          totalEmails: allMessages.length,
+          emailsProcessedForClassification: emailsForClassification.length,
+          classifiedAsJobRelated: classifiedAsJob,
+          classificationErrors: classificationErrors,
+          excludedCount: excludedCount.excluded,
+          excludedEmails: excludedEmails,
+          classificationStats: {
+            threshold: classificationThreshold,
+            jobLabels: jobLabels,
+            spaceUrl: process.env.HUGGINGFACE_SPACE_URL,
+          },
+        };
+
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify(result)}\n\n`)
+        );
+        controller.close();
+      } catch (error) {
+        const errorResult = {
+          type: "error",
+          message: "Failed to process emails",
+          details: error instanceof Error ? error.message : "Unknown error",
+        };
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify(errorResult)}\n\n`)
+        );
+        controller.close();
       }
-    }
+    },
+  });
 
-    console.log(
-      `Processing completed. Found ${processedApplications.length} job applications.`
-    );
-
-    return NextResponse.json({
-      success: true,
-      processed: processedApplications.length,
-      applications: processedApplications,
-      totalEmails: allMessages.length,
-      emailsProcessedForClassification: emailsForClassification.length,
-      classifiedAsJobRelated: classifiedAsJob,
-      classificationErrors: classificationErrors,
-      excludedCount: excludedCount.excluded,
-      excludedEmails: excludedEmails,
-      classificationStats: {
-        threshold: classificationThreshold,
-        jobLabels: jobLabels,
-        spaceUrl:
-          process.env.HUGGINGFACE_SPACE_URL || "Tomiwajin/Email-Classifier",
-      },
-    });
-  } catch (error) {
-    console.error("Gmail processing error:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to process emails",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
-  }
+  return new NextResponse(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }

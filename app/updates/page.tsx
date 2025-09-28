@@ -48,7 +48,6 @@ interface JobApplication {
   subject: string;
 }
 
-// API response format with string dates that need conversion
 interface ProcessedApplication {
   id: string;
   company: string;
@@ -67,7 +66,13 @@ interface DatePreset {
   };
 }
 
-// Status color mappings for consistent badge styling
+interface ProcessingProgress {
+  stage: string;
+  current: number;
+  total: number;
+  percentage: number;
+}
+
 const statusColors = {
   applied: "bg-blue-100 text-blue-800",
   rejected: "bg-red-100 text-red-800",
@@ -77,7 +82,6 @@ const statusColors = {
   withdrawn: "bg-gray-100 text-gray-800",
 };
 
-// Predefined date range options for quick filtering
 const datePresets: DatePreset[] = [
   {
     label: "Last 7 days",
@@ -110,7 +114,6 @@ const datePresets: DatePreset[] = [
 ];
 
 export default function HomePage() {
-  // Global state from Zustand store
   const updates = useApplicationStore((state) => state.applications);
   const addApplications = useApplicationStore((state) => state.addApplications);
   const startDate = useApplicationStore((state) => state.startDate);
@@ -120,7 +123,6 @@ export default function HomePage() {
 
   const { excludedEmails } = useExcludedEmails();
 
-  // Local component state
   const [filteredApplications, setFilteredApplications] = useState<
     JobApplication[]
   >([]);
@@ -131,8 +133,9 @@ export default function HomePage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [processingProgress, setProcessingProgress] =
+    useState<ProcessingProgress | null>(null);
 
-  // Handle date preset selection
   const handlePresetClick = (preset: DatePreset) => {
     const { start, end } = preset.getValue();
     setStartDate(start);
@@ -142,13 +145,9 @@ export default function HomePage() {
   };
 
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Filter applications based on search term, status, and date range
   useEffect(() => {
     let filtered = updates;
 
@@ -176,7 +175,6 @@ export default function HomePage() {
     setFilteredApplications(filtered);
   }, [updates, searchTerm, statusFilter, startDate, endDate]);
 
-  // Clear preset selection when dates are manually changed
   useEffect(() => {
     const matchingPreset = datePresets.find((preset) => {
       const { start, end } = preset.getValue();
@@ -193,7 +191,6 @@ export default function HomePage() {
     }
   }, [startDate, endDate]);
 
-  // Show/hide back to top button based on scroll position
   useEffect(() => {
     const handleScroll = () => {
       setShowBackToTop(window.scrollY > 200);
@@ -203,7 +200,6 @@ export default function HomePage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Process emails from Gmail API
   const handleProcessEmails = async () => {
     if (!startDate || !endDate) {
       setFormError("Please select a valid start and end date.");
@@ -217,6 +213,12 @@ export default function HomePage() {
     }
 
     setIsProcessing(true);
+    setProcessingProgress({
+      stage: "Starting...",
+      current: 0,
+      total: 100,
+      percentage: 0,
+    });
 
     try {
       const response = await fetch("/api/process-emails", {
@@ -229,33 +231,78 @@ export default function HomePage() {
         }),
       });
 
-      const result = await response.json();
+      if (!response.body) {
+        throw new Error("No response body");
+      }
 
-      if (result.success && Array.isArray(result.applications)) {
-        // Convert string dates to Date objects for consistency
-        const newAppsWithDateObjects = result.applications.map(
-          (app: ProcessedApplication) => ({
-            ...app,
-            date: new Date(app.date),
-          })
-        );
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-        addApplications(newAppsWithDateObjects);
+      while (true) {
+        const { done, value } = await reader.read();
 
-        if (result.excludedCount > 0) {
-          console.log(
-            `Processed ${result.processed} applications, excluded ${result.excludedCount} emails`
-          );
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.substring(6));
+
+              if (data.type === "progress") {
+                setProcessingProgress({
+                  stage: data.stage,
+                  current: data.current,
+                  total: data.total,
+                  percentage: Math.round((data.current / data.total) * 100),
+                });
+              } else if (data.type === "complete") {
+                const newAppsWithDateObjects = data.applications.map(
+                  (app: ProcessedApplication) => ({
+                    ...app,
+                    date: new Date(app.date),
+                  })
+                );
+
+                addApplications(newAppsWithDateObjects);
+
+                if (data.excludedCount > 0) {
+                  console.log(
+                    `Processed ${data.processed} applications, excluded ${data.excludedCount} emails`
+                  );
+                }
+
+                setProcessingProgress({
+                  stage: "Complete!",
+                  current: 100,
+                  total: 100,
+                  percentage: 100,
+                });
+
+                setTimeout(() => {
+                  setProcessingProgress(null);
+                }, 2000);
+              } else if (data.type === "error") {
+                throw new Error(data.message);
+              }
+            } catch (parseError) {
+              console.error("Error parsing progress data:", parseError);
+            }
+          }
         }
       }
     } catch (error) {
       console.error("Failed to process emails:", error);
+      setProcessingProgress(null);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Initiate Gmail OAuth flow
   const handleGmailLogin = async () => {
     try {
       const response = await fetch("/api/auth/gmail");
@@ -266,7 +313,6 @@ export default function HomePage() {
     }
   };
 
-  // Check Gmail authentication status on component mount
   useEffect(() => {
     const checkGmailAuth = async () => {
       try {
@@ -281,29 +327,60 @@ export default function HomePage() {
     checkGmailAuth();
   }, []);
 
+  const getProcessingButtonText = () => {
+    if (!isProcessing) return "Process Emails";
+
+    if (processingProgress) {
+      return `${processingProgress.stage} ${processingProgress.percentage}%`;
+    }
+
+    return "Processing...";
+  };
+
   return (
-    <div className="flex flex-col">
-      {/* Header with title and action buttons */}
-      <div className="flex items-center justify-between p-4 border-b w-full">
+    <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b w-full gap-4">
         <div className="flex items-center space-x-4">
           <SidebarTrigger />
           <h1 className="text-xl font-semibold">Dashboard</h1>
         </div>
         <div className="flex items-center gap-2">
           {isGmailConnected && (
-            <Button
-              onClick={handleProcessEmails}
-              disabled={isProcessing}
-              size="sm"
-            >
-              <RefreshCw
-                className={`w-4 h-4 mr-2 ${isProcessing ? "animate-spin" : ""}`}
-              />
-              {isProcessing ? "Processing..." : "Process Emails"}
-            </Button>
+            <div className="flex flex-col items-end w-full sm:w-auto">
+              <Button
+                onClick={handleProcessEmails}
+                disabled={isProcessing}
+                size="sm"
+                className="relative w-full sm:w-auto"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 mr-2 ${
+                    isProcessing ? "animate-spin" : ""
+                  }`}
+                />
+                <span className="truncate">{getProcessingButtonText()}</span>
+              </Button>
+              {isProcessing && processingProgress && (
+                <div className="mt-2 w-full max-w-[200px]">
+                  <div className="flex justify-end text-xs text-muted-foreground mb-1">
+                    <span>{processingProgress.percentage}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${processingProgress.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           )}
           {!isGmailConnected && (
-            <Button onClick={handleGmailLogin} size="sm">
+            <Button
+              onClick={handleGmailLogin}
+              size="sm"
+              className="w-full sm:w-auto"
+            >
               <Mail className="w-4 h-4 mr-2" />
               Connect Gmail
             </Button>
@@ -311,9 +388,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Date filter controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border-b">
-        {/* Date preset buttons */}
+      <div className="flex flex-col gap-4 p-4 border-b">
         <div className="flex flex-wrap gap-2">
           {datePresets.map((preset, index) => (
             <Button
@@ -322,7 +397,7 @@ export default function HomePage() {
                 selectedPreset === preset.label ? "secondary" : "outline"
               }
               size="sm"
-              className="h-9 px-2 sm:px-4 text-xs sm:text-sm"
+              className="h-9 px-2 sm:px-4 text-xs sm:text-sm flex-shrink-0"
               onClick={() => handlePresetClick(preset)}
             >
               <CalendarIcon className="w-4 h-4 mr-1" />
@@ -331,12 +406,9 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Visual separator */}
-        <div className="hidden sm:block w-px h-8 bg-border"></div>
-        <div className="sm:hidden w-full h-px bg-border"></div>
+        <div className="hidden sm:block w-full h-px bg-border"></div>
 
-        {/* Custom date range selectors */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 flex-1">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <Popover>
               <PopoverTrigger asChild>
@@ -393,7 +465,6 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Search and filter controls */}
       <div className="flex flex-col sm:flex-row gap-4 p-4 border-b">
         <div className="flex-1">
           <div className="relative">
@@ -425,7 +496,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Main content area */}
       <div className="flex-1 p-4">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">
@@ -436,8 +506,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Mobile card layout */}
-        <div className="block md:hidden space-y-3">
+        <div className="block lg:hidden space-y-3">
           {filteredApplications.map((app) => (
             <Card key={app.id} className="p-3 shadow-sm">
               <div className="space-y-2">
@@ -479,7 +548,6 @@ export default function HomePage() {
             </Card>
           ))}
 
-          {/* Empty state for mobile */}
           {filteredApplications.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <div className="space-y-3">
@@ -494,29 +562,28 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Desktop table layout */}
-        <div className="hidden md:block rounded-md border">
+        <div className="hidden lg:block rounded-md border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[200px]">Company</TableHead>
-                <TableHead className="w-[250px]">Role</TableHead>
-                <TableHead className="w-[120px]">Status</TableHead>
-                <TableHead className="w-[200px]">Email</TableHead>
-                <TableHead className="w-[120px]">Date</TableHead>
-                <TableHead>Subject</TableHead>
+                <TableHead className="min-w-[150px]">Company</TableHead>
+                <TableHead className="min-w-[200px]">Role</TableHead>
+                <TableHead className="min-w-[100px]">Status</TableHead>
+                <TableHead className="min-w-[180px]">Email</TableHead>
+                <TableHead className="min-w-[100px]">Date</TableHead>
+                <TableHead className="min-w-[200px]">Subject</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredApplications.map((app) => (
                 <TableRow key={app.id}>
                   <TableCell className="font-medium">
-                    <div className="truncate" title={app.company}>
+                    <div className="truncate max-w-[150px]" title={app.company}>
                       {app.company}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="truncate" title={app.role}>
+                    <div className="truncate max-w-[200px]" title={app.role}>
                       {app.role}
                     </div>
                   </TableCell>
@@ -526,22 +593,21 @@ export default function HomePage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    <div className="truncate" title={app.email}>
+                    <div className="truncate max-w-[180px]" title={app.email}>
                       {app.email}
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">
                     {format(app.date, "MMM dd, yyyy")}
                   </TableCell>
-                  <TableCell className="max-w-xs">
-                    <div className="truncate" title={app.subject}>
+                  <TableCell>
+                    <div className="truncate max-w-[200px]" title={app.subject}>
                       {app.subject}
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
 
-              {/* Empty state for desktop */}
               {filteredApplications.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-12">
@@ -561,7 +627,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Floating back to top button */}
       {showBackToTop && (
         <Button
           onClick={scrollToTop}
