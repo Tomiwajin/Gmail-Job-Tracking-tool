@@ -8,7 +8,8 @@ export default function Visibility({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const showSidebar = pathname !== "/";
+  const showSidebar =
+    pathname !== "/" && pathname !== "/privacy" && pathname !== "/terms";
 
   if (!showSidebar) {
     return <>{children}</>;

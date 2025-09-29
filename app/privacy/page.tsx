@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,7 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft,
   Shield,
@@ -19,538 +22,545 @@ import {
   FileText,
   Mail,
   AlertCircle,
+  Server,
+  Globe,
+  Trash2,
+  CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 
-export default function Privacy() {
+export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="container mx-auto px-4 py-6 md:px-6 md:py-8 max-w-5xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Link href="/">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hover:bg-white/80 shadow-sm border border-slate-200"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-          </div>
+    <div className="flex flex-col min-h-screen">
+      <div className="flex items-center p-3 sm:p-4 border-b w-full">
+        <Link href="/">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1 sm:gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-xs sm:text-sm">Return Home</span>
+          </Button>
+        </Link>
+      </div>
 
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Shield className="w-8 h-8 text-blue-600" />
-              </div>
+      <div className="flex-1 p-3 sm:p-4 lg:p-6 mx-auto w-full max-w-7xl">
+        <div className="text-center space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+          <div className="flex items-center justify-center">
+            <div className="p-2 sm:p-3 rounded-full">
+              <Shield className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-              Privacy Policy
-            </h1>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              We&apos;re committed to protecting your privacy and being
-              transparent about how we handle your data
-            </p>
           </div>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground px-2">
+            Privacy Policy
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-4">
+            We're committed to protecting your privacy and being transparent
+            about how we handle your data
+          </p>
         </div>
 
-        {/* Quick Info Card */}
-        <Card className="mb-8 border-blue-200 bg-blue-50">
-          <CardHeader>
+        <Card className="mb-6 sm:mb-8">
+          <CardHeader className="pb-4">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-blue-600" />
-              <CardTitle className="text-blue-900">Key Information</CardTitle>
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+              <CardTitle className="text-base sm:text-lg">
+                Key Information
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
               <div>
-                <strong className="text-blue-900">Effective Date:</strong>
+                <strong>Effective Date:</strong>
                 <br />
-                <span className="text-blue-700">
-                  {new Date().toLocaleDateString()}
-                </span>
+                <span className="text-muted-foreground">August 2025</span>
               </div>
               <div>
-                <strong className="text-blue-900">Last Updated:</strong>
+                <strong>Last Updated:</strong>
                 <br />
-                <span className="text-blue-700">
-                  {new Date().toLocaleDateString()}
-                </span>
+                <span className="text-muted-foreground">September 2025</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Table of Contents - Desktop Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle className="text-lg">Contents</CardTitle>
+        <Tabs defaultValue="introduction" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 h-auto p-1">
+            <TabsTrigger
+              value="introduction"
+              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-2 text-xs"
+            >
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-[10px] sm:text-xs lg:text-sm">Intro</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="collection"
+              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-2 text-xs"
+            >
+              <Database className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-[10px] sm:text-xs lg:text-sm">Data</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="usage"
+              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-2 text-xs"
+            >
+              <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-[10px] sm:text-xs lg:text-sm">Usage</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="security"
+              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-2 text-xs"
+            >
+              <Key className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-[10px] sm:text-xs lg:text-sm">
+                Security
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="third-party"
+              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-2 text-xs"
+            >
+              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-[10px] sm:text-xs lg:text-sm">
+                3rd Party
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="rights"
+              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-2 text-xs"
+            >
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-[10px] sm:text-xs lg:text-sm">Rights</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="deletion"
+              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-2 text-xs"
+            >
+              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-600" />
+              <span className="text-[10px] sm:text-xs lg:text-sm">Delete</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="contact"
+              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-2 text-xs"
+            >
+              <Mail className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-[10px] sm:text-xs lg:text-sm">Contact</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="introduction" className="space-y-4 sm:space-y-6">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Introduction
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {[
-                  { id: "introduction", title: "Introduction", icon: FileText },
-                  {
-                    id: "data-collection",
-                    title: "Data Collection",
-                    icon: Database,
-                  },
-                  { id: "data-usage", title: "How We Use Data", icon: Eye },
-                  { id: "security", title: "Security", icon: Key },
-                  { id: "third-party", title: "Third Parties", icon: Users },
-                  { id: "your-rights", title: "Your Rights", icon: Shield },
-                  { id: "contact", title: "Contact", icon: Mail },
-                ].map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <a
-                      key={item.id}
-                      href={`#${item.id}`}
-                      className="flex items-center gap-2 text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-md transition-colors"
-                    >
-                      <Icon className="w-4 h-4" />
-                      {item.title}
-                    </a>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* Introduction */}
-            <section id="introduction">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-slate-600" />
-                    <CardTitle>Introduction</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="prose prose-slate max-w-none">
-                  <p className="text-slate-700 leading-relaxed">
-                    This Privacy Policy describes how Job Application Tracker
-                    collects, uses, and protects your information when you use
-                    our web application. We are committed to maintaining the
-                    highest standards of data protection and transparency.
-                  </p>
-                </CardContent>
-              </Card>
-            </section>
-
-            {/* Data Collection */}
-            <section id="data-collection">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Database className="w-5 h-5 text-slate-600" />
-                    <CardTitle>Information We Access and Store</CardTitle>
-                  </div>
-                  <CardDescription>
-                    We access certain information to provide the service and
-                    store minimal data for authentication and settings.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                      <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                        <Eye className="w-4 h-4" />
-                        Accessed (Not Stored)
+              <CardContent className="space-y-3 sm:space-y-4">
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                  CareerSync is a free, open-source job application tracking
+                  service that helps you organize and analyze your job search by
+                  processing your Gmail messages. This Privacy Policy explains
+                  how we collect, use, protect, and handle your information when
+                  you use our service.
+                </p>
+                <div className="border rounded-lg p-3 sm:p-4 bg-muted/20">
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium mb-1 text-sm sm:text-base">
+                        Key Principle
                       </h4>
-                      <Badge
-                        variant="secondary"
-                        className="mb-3 bg-blue-100 text-blue-800"
-                      >
-                        Temporary Access Only
-                      </Badge>
-                      <ul className="text-sm text-blue-800 space-y-1">
-                        <li>• Gmail messages matching job criteria</li>
-                        <li>• Email content for parsing</li>
-                        <li>• Basic Google profile info</li>
-                      </ul>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        We collect and store only the minimum data necessary to
+                        provide our service, and you maintain control over your
+                        data at all times.
+                      </p>
                     </div>
-
-                    <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg">
-                      <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
-                        <Database className="w-4 h-4" />
-                        Stored on Our Server
-                      </h4>
-                      <Badge
-                        variant="secondary"
-                        className="mb-3 bg-purple-100 text-purple-800"
-                      >
-                        Supabase Database
-                      </Badge>
-                      <ul className="text-sm text-purple-800 space-y-1">
-                        <li>• Your email address</li>
-                        <li>• Encrypted Gmail refresh token</li>
-                        <li>• Your email exclusion settings</li>
-                        <li>• Account creation/update dates</li>
-                      </ul>
-                    </div>
-
-                    <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
-                      <h4 className="font-semibold text-green-900 mb-2 flex items-center gap-2">
-                        <Key className="w-4 h-4" />
-                        Stored Locally
-                      </h4>
-                      <Badge
-                        variant="secondary"
-                        className="mb-3 bg-green-100 text-green-800"
-                      >
-                        In Your Browser Only
-                      </Badge>
-                      <ul className="text-sm text-green-800 space-y-1">
-                        <li>• Extracted job application data</li>
-                        <li>• Company names and job titles</li>
-                        <li>• Application dates and statuses</li>
-                        <li>• Brief email subjects</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-amber-900 mb-1">
-                          What We Don&apos;t Store
-                        </h4>
-                        <p className="text-sm text-amber-800">
-                          We <strong>never store</strong> your email content,
-                          full messages, or job application details on our
-                          servers. Only minimal authentication and preference
-                          data is stored in our secure database.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            {/* Data Usage */}
-            <section id="data-usage">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Eye className="w-5 h-5 text-slate-600" />
-                    <CardTitle>How We Process Your Information</CardTitle>
-                  </div>
-                  <CardDescription>
-                    We only process your data to extract job application
-                    insights - nothing is stored on our servers.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-green-900 mb-3">
-                      We process your Gmail data solely to:
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {[
-                        "Parse Gmail messages for job application keywords",
-                        "Extract company names and job titles",
-                        "Identify application statuses and dates",
-                        "Create summaries stored locally in your browser",
-                      ].map((item, index) => (
-                        <div key={index} className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <span className="text-sm text-green-800">{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-blue-900 mb-1">
-                          Privacy by Design
-                        </h4>
-                        <p className="text-sm text-blue-800">
-                          All processing happens in real-time. We don&apos;t
-                          store your email content, and all extracted job data
-                          is saved locally in your browser, not on our servers.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            {/* Security */}
-            <section id="security">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Key className="w-5 h-5 text-slate-600" />
-                    <CardTitle>Data Storage and Security</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="border border-purple-200 bg-purple-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-purple-900 mb-2">
-                        Server Storage
-                      </h4>
-                      <Badge variant="secondary" className="mb-2">
-                        Supabase (Secure)
-                      </Badge>
-                      <ul className="text-sm text-purple-800 space-y-1">
-                        <li>• Email address for account identification</li>
-                        <li>• Encrypted Gmail refresh tokens</li>
-                        <li>• User preference settings</li>
-                        <li>• Hosted on secure cloud infrastructure</li>
-                      </ul>
-                    </div>
-
-                    <div className="border border-blue-200 bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-blue-900 mb-2">
-                        Local Storage
-                      </h4>
-                      <Badge variant="secondary" className="mb-2">
-                        Browser Only
-                      </Badge>
-                      <ul className="text-sm text-blue-800 space-y-1">
-                        <li>• Job application data</li>
-                        <li>• Analytics and insights</li>
-                        <li>• Temporary access tokens</li>
-                        <li>• You control this data completely</li>
-                      </ul>
-                    </div>
-
-                    <div className="border border-green-200 bg-green-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-green-900 mb-2">
-                        Gmail Access
-                      </h4>
-                      <Badge variant="secondary" className="mb-2">
-                        Read Only
-                      </Badge>
-                      <ul className="text-sm text-green-800 space-y-1">
-                        <li>• Only job-related emails accessed</li>
-                        <li>• No email content stored</li>
-                        <li>• Cannot send or modify emails</li>
-                        <li>• Access revocable anytime</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                      <Shield className="w-4 h-4" />
-                      Security Measures
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
-                      <div>
-                        <strong>Encryption:</strong>
-                        <ul className="mt-1 space-y-1">
-                          <li>• Gmail refresh tokens encrypted at rest</li>
-                          <li>• HTTPS for all data transmission</li>
-                          <li>• Secure OAuth 2.0 authentication</li>
-                        </ul>
-                      </div>
-                      <div>
-                        <strong>Data Protection:</strong>
-                        <ul className="mt-1 space-y-1">
-                          <li>• Minimal data collection principle</li>
-                          <li>• No email content retention</li>
-                          <li>• User-controlled local storage</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            {/* Third Party Services */}
-            <section id="third-party">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-slate-600" />
-                    <CardTitle>Third-Party Services</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-orange-900 mb-2">
-                      Google Services Integration
-                    </h4>
-                    <div className="space-y-2 text-sm text-orange-800">
-                      <p>• Subject to Google&apos;s Privacy Policy</p>
-                      <p>• Secure OAuth 2.0 authentication</p>
-                      <p>• Revoke access anytime through Google settings</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            {/* Your Rights */}
-            <section id="your-rights">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-slate-600" />
-                    <CardTitle>Your Rights and Choices</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-slate-900 mb-3">
-                      You have full control over your data:
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[
-                        {
-                          title: "Revoke Gmail Access",
-                          desc: "Disconnect through Google Account settings - stops all data processing",
-                        },
-                        {
-                          title: "Clear Local Data",
-                          desc: "Remove all job application data stored in your browser",
-                        },
-                        {
-                          title: "Export Your Data",
-                          desc: "Download your job application data anytime",
-                        },
-                        {
-                          title: "Delete Account Data",
-                          desc: "Request deletion of your email and settings from our database",
-                        },
-                        {
-                          title: "Update Email Exclusions",
-                          desc: "Modify which emails are filtered out during processing",
-                        },
-                        {
-                          title: "Account Information",
-                          desc: "View and update your stored account information",
-                        },
-                      ].map((item, index) => (
-                        <div key={index} className="flex items-start gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-bold text-blue-600">
-                              {index + 1}
-                            </span>
-                          </div>
-                          <div>
-                            <h5 className="font-medium text-slate-900">
-                              {item.title}
-                            </h5>
-                            <p className="text-sm text-slate-600">
-                              {item.desc}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-red-900 mb-1">
-                          Data Deletion
-                        </h4>
-                        <p className="text-sm text-red-800">
-                          When you disconnect your account, we can delete your
-                          email address and settings from our database. Local
-                          browser data can be cleared by you at any time. Email
-                          us to request complete account deletion.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            {/* Contact */}
-            <section id="contact">
-              <Card className="border-green-200 bg-green-50">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-5 h-5 text-green-600" />
-                    <CardTitle className="text-green-900">
-                      Contact & Compliance
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-green-900 mb-2">
-                      Get in Touch
-                    </h4>
-                    <div className="space-y-1 text-sm text-green-800">
-                      <p>📧 Email: jobstatustracker@gmail.com</p>
-                      <p>🔗 GitHub: https://github.com/Tomiwajin</p>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-green-200 my-4"></div>
-
-                  <div>
-                    <h4 className="font-semibold text-green-900 mb-2">
-                      Compliance Standards
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {["GDPR", "CCPA", "Google API Policy"].map((standard) => (
-                        <Badge
-                          key={standard}
-                          variant="secondary"
-                          className="bg-green-100 text-green-800"
-                        >
-                          {standard}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            {/* Footer */}
-            <Card className="bg-slate-900 text-white border-slate-800">
-              <CardContent className="pt-6">
-                <div className="text-center space-y-2">
-                  <p className="text-slate-300">
-                    Questions about this policy? We&apos;re here to help.
-                  </p>
-                  <div className="flex justify-center gap-4">
-                    <Link href="/">
-                      <Button
-                        variant="ghost"
-                        className="text-slate-300 hover:text-white hover:bg-slate-800"
-                      >
-                        Dashboard
-                      </Button>
-                    </Link>
-                    <Link href="/terms">
-                      <Button
-                        variant="ghost"
-                        className="text-slate-300 hover:text-white hover:bg-slate-800"
-                      >
-                        Terms of Service
-                      </Button>
-                    </Link>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="collection" className="space-y-4 sm:space-y-6">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Database className="w-4 h-4 sm:w-5 sm:h-5" />
+                  What Information We Collect
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  We collect minimal data and process emails temporarily without
+                  storage.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="border rounded-lg p-3 sm:p-4 bg-muted/30">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
+                      <Server className="w-3 h-3 sm:w-4 sm:h-4" />
+                      Stored on Our Servers
+                    </h4>
+                    <Badge variant="secondary" className="mb-2 sm:mb-3 text-xs">
+                      Supabase Database
+                    </Badge>
+                    <ul className="text-xs sm:text-sm space-y-1 text-muted-foreground">
+                      <li>• Your email address</li>
+                      <li>• Encrypted Gmail refresh tokens</li>
+                      <li>• Email exclusion preferences</li>
+                      <li>• Account creation/update dates</li>
+                    </ul>
+                  </div>
+
+                  <div className="border rounded-lg p-3 sm:p-4 bg-muted/30">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
+                      <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                      Processed (Not Stored)
+                    </h4>
+                    <Badge variant="secondary" className="mb-2 sm:mb-3 text-xs">
+                      Real-time Only
+                    </Badge>
+                    <ul className="text-xs sm:text-sm space-y-1 text-muted-foreground">
+                      <li>• Gmail message content</li>
+                      <li>• Email metadata (subject, sender, date)</li>
+                      <li>• AI classification results</li>
+                      <li>• Extracted job application data</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-3 sm:p-4 bg-muted/30">
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1 text-sm sm:text-base">
+                        What We Never Store
+                      </h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        We <strong>never store</strong> your email content, full
+                        messages, or extracted job application details on our
+                        servers. All processing is done in real-time and data is
+                        immediately discarded after sending results to your
+                        browser.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="usage" className="space-y-4 sm:space-y-6">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                  How We Process Your Information
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  Real-time email processing with AI classification - no
+                  permanent storage of email content.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-lg p-3 sm:p-4 bg-muted/30">
+                  <h4 className="font-semibold mb-3 text-sm sm:text-base">
+                    Our Processing Pipeline:
+                  </h4>
+                  <div className="space-y-2 sm:space-y-3">
+                    {[
+                      "Access Gmail messages within your date range",
+                      "Filter emails using your exclusion preferences",
+                      "Send email text to our HuggingFace AI for classification",
+                      "Extract job details (company, role, status, date)",
+                      "Send results to your browser and delete server-side data",
+                    ].map((action, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-2 sm:gap-3"
+                      >
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          {index + 1}
+                        </div>
+                        <span className="text-xs sm:text-sm leading-relaxed">
+                          {action}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="third-party" className="space-y-4 sm:space-y-6">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Third-Party Integrations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="border rounded-lg p-3 sm:p-4 bg-muted/30">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
+                      <Globe className="w-3 h-3 sm:w-4 sm:h-4" />
+                      Google Gmail API
+                    </h4>
+                    <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
+                      <p>• Secure OAuth 2.0 authentication</p>
+                      <p>• Read-only access to your emails</p>
+                      <p>• Subject to Google's Privacy Policy</p>
+                      <p>• Revocable anytime through Google settings</p>
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg p-3 sm:p-4 bg-muted/30">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
+                      <Database className="w-3 h-3 sm:w-4 sm:h-4" />
+                      HuggingFace Spaces
+                    </h4>
+                    <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
+                      <p>• AI email classification</p>
+                      <p>• Our custom model - no data logging</p>
+                      <p>• Real-time processing only</p>
+                      <p>• No email content retention</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-4 sm:space-y-6">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Key className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Data Security
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-lg p-3 sm:p-4 bg-muted/30">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
+                    <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+                    Security Measures
+                  </h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                    <div>
+                      <strong className="text-foreground">Encryption:</strong>
+                      <ul className="mt-1 space-y-1">
+                        <li>• Gmail refresh tokens encrypted at rest</li>
+                        <li>• HTTPS for all data transmission</li>
+                        <li>• Secure OAuth 2.0 authentication</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <strong className="text-foreground">
+                        Data Protection:
+                      </strong>
+                      <ul className="mt-1 space-y-1">
+                        <li>• Minimal data collection principle</li>
+                        <li>• No email content retention</li>
+                        <li>• Enterprise-grade database security</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="rights" className="space-y-4 sm:space-y-6">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Your Rights and Control
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-lg p-3 sm:p-4 bg-muted/30">
+                  <h4 className="font-semibold mb-3 text-sm sm:text-base">
+                    You have full control over your data:
+                  </h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+                    {[
+                      {
+                        title: "Revoke Gmail Access",
+                        desc: "Disconnect through Google Account settings - stops all data processing",
+                      },
+                      {
+                        title: "Export Your Data",
+                        desc: "Download your job application data anytime from your browser",
+                      },
+                      {
+                        title: "Delete Account Data",
+                        desc: "Email us to remove your account and settings from our database",
+                      },
+                      {
+                        title: "Update Preferences",
+                        desc: "Modify email exclusion settings and processing preferences",
+                      },
+                    ].map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-2 sm:gap-3"
+                      >
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold">{index + 1}</span>
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-sm sm:text-base">
+                            {item.title}
+                          </h5>
+                          <p className="text-xs sm:text-sm text-muted-foreground">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="deletion" className="space-y-4 sm:space-y-6">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                  Data Deletion
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="border border-red-200 rounded-lg p-3 sm:p-4 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900">
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-red-900 dark:text-red-200 mb-2 text-sm sm:text-base">
+                        Complete Account Deletion
+                      </h4>
+                      <p className="text-xs sm:text-sm text-red-800 dark:text-red-300 mb-3">
+                        Email us at{" "}
+                        <a
+                          href="mailto:jobstatustracker@gmail.com?subject=Account%20Deletion%20Request"
+                          className="font-medium underline hover:no-underline break-all"
+                        >
+                          jobstatustracker@gmail.com
+                        </a>{" "}
+                        with the subject "Account Deletion Request" from your
+                        CareerSync account email address.
+                      </p>
+                      <div className="text-xs sm:text-sm text-red-800 dark:text-red-300">
+                        <strong>What gets deleted:</strong>
+                        <ul className="ml-3 sm:ml-4 mt-1 space-y-1">
+                          <li>• Your email address from our database</li>
+                          <li>• Encrypted refresh tokens</li>
+                          <li>• All preferences and settings</li>
+                          <li>• Gmail access automatically revoked</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="contact" className="space-y-4 sm:space-y-6">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Contact & Support
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 sm:space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">
+                    Get in Touch
+                  </h4>
+                  <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
+                    <p>
+                      📧 Email:{" "}
+                      <a
+                        href="mailto:jobstatustracker@gmail.com"
+                        className="text-foreground hover:underline break-all"
+                      >
+                        jobstatustracker@gmail.com
+                      </a>
+                    </p>
+
+                    <p>
+                      🔗 GitHub:{" "}
+                      <a
+                        href="https://github.com/Tomiwajin/Gmail-Job-Tracking-tool"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-foreground hover:underline break-words"
+                      >
+                        Open source repository available
+                      </a>
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">
+                    Compliance Standards
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {["CCPA", "Google API Policy", "SOC 2"].map((standard) => (
+                      <Badge
+                        key={standard}
+                        variant="secondary"
+                        className="text-xs"
+                      >
+                        {standard}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <Card className="mt-6 sm:mt-8 bg-muted">
+          <CardContent className="pt-4 sm:pt-6">
+            <div className="text-center space-y-2 sm:space-y-3">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Questions about this policy? We're here to help.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
+                <Link href="/">
+                  <Button
+                    variant="ghost"
+                    className="w-full sm:w-auto text-xs sm:text-sm"
+                  >
+                    Home
+                  </Button>
+                </Link>
+                <Link href="/terms">
+                  <Button
+                    variant="ghost"
+                    className="w-full sm:w-auto text-xs sm:text-sm"
+                  >
+                    Terms of Service
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
