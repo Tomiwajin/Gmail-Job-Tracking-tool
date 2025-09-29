@@ -1,13 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -178,10 +171,10 @@ export default function TermsPage() {
               <CardContent>
                 <div className="border rounded-lg p-3 sm:p-4 bg-muted/20">
                   <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-3">
-                    By accessing and using CareerSync ("the Service"), you
-                    accept and agree to be bound by these Terms of Service. If
-                    you do not agree to these terms, please do not use the
-                    Service.
+                    By accessing and using CareerSync (&ldquo;the
+                    Service&rdquo;), you accept and agree to be bound by these
+                    Terms of Service. If you do not agree to these terms, please
+                    do not use the Service.
                   </p>
                   <div className="flex items-start gap-2 sm:gap-3">
                     <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />
@@ -281,7 +274,9 @@ export default function TermsPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span>Monitor CareerSync's access permissions</span>
+                        <span>
+                          Monitor CareerSync&rsquo;s access permissions
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -387,7 +382,7 @@ export default function TermsPage() {
               <CardContent className="space-y-3 sm:space-y-4">
                 <div className="border rounded-lg p-3 sm:p-4 bg-muted/30">
                   <h4 className="font-semibold mb-2 text-sm sm:text-base">
-                    Service Provided "AS IS"
+                    Service Provided &ldquo;AS IS&rdquo;
                   </h4>
                   <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
                     We make no warranties regarding:
@@ -557,7 +552,8 @@ export default function TermsPage() {
               <CardContent className="space-y-3 sm:space-y-4">
                 <div className="text-center space-y-2 sm:space-y-3">
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Questions about these Terms of Service? We're here to help.
+                    Questions about these Terms of Service? We&rsquo;re here to
+                    help.
                   </p>
                   <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
                     <p className="flex items-center justify-center gap-2">

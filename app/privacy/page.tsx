@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -56,8 +55,8 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-4">
-            We're committed to protecting your privacy and being transparent
-            about how we handle your data
+            We&rsquo;re committed to protecting your privacy and being
+            transparent about how we handle your data
           </p>
         </div>
 
@@ -314,7 +313,7 @@ export default function PrivacyPage() {
                     <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
                       <p>• Secure OAuth 2.0 authentication</p>
                       <p>• Read-only access to your emails</p>
-                      <p>• Subject to Google's Privacy Policy</p>
+                      <p>• Subject to Google&rsquo;s Privacy Policy</p>
                       <p>• Revocable anytime through Google settings</p>
                     </div>
                   </div>
@@ -454,8 +453,8 @@ export default function PrivacyPage() {
                         >
                           jobstatustracker@gmail.com
                         </a>{" "}
-                        with the subject "Account Deletion Request" from your
-                        CareerSync account email address.
+                        with the subject &ldquo;Account Deletion Request&rdquo;
+                        from your CareerSync account email address.
                       </p>
                       <div className="text-xs sm:text-sm text-red-800 dark:text-red-300">
                         <strong>What gets deleted:</strong>
@@ -538,7 +537,7 @@ export default function PrivacyPage() {
           <CardContent className="pt-4 sm:pt-6">
             <div className="text-center space-y-2 sm:space-y-3">
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Questions about this policy? We're here to help.
+                Questions about this policy? We&rsquo;re here to help.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
                 <Link href="/">
