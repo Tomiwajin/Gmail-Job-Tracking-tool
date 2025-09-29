@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Brain, ChartLine, FolderUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ShootingStars } from "@/components/ui/shooting-stars";
+import { StarsBackground } from "@/components/ui/stars-background";
 
 const LandingPage = () => {
   return (
@@ -67,15 +69,13 @@ const LandingPage = () => {
                 className="px-8 py-3 bg-transparent text-white border border-gray-600 font-semibold rounded-lg hover:bg-gray-800 hover:-translate-y-0.5 transition-all duration-300"
                 onClick={() => (window.location.href = "/updates")}
               >
-                Get Started
+                Get Started for Free
               </Button>
             </div>
           </div>
         </div>
-
-        <div className="absolute top-20 left-10 w-2 h-2 bg-gray-200 rounded-full animate-pulse opacity-60"></div>
-        <div className="absolute top-40 right-20 w-3 h-3 bg-gray-400 rounded-full animate-pulse opacity-40"></div>
-        <div className="absolute bottom-32 left-1/4 w-1 h-1 bg-white rounded-full animate-pulse opacity-30"></div>
+        <ShootingStars />
+        <StarsBackground />
       </section>
 
       {/* Features Section */}
