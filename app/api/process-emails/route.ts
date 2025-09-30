@@ -384,9 +384,7 @@ function extractEmailBody(payload: gmail_v1.Schema$MessagePart): string {
 
           text += htmlStripped + "\n";
         }
-      } catch {
-        // Skip malformed email parts
-      }
+      } catch {}
     }
 
     if (part.parts && Array.isArray(part.parts)) {

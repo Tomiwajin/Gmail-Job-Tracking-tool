@@ -60,7 +60,7 @@ function shouldExcludeEmail(
       return true;
     }
 
-    // Domain match (starts with @)
+    // Domain match
     if (
       normalizedExcluded.startsWith("@") &&
       extractedEmail.endsWith(normalizedExcluded)
@@ -68,13 +68,12 @@ function shouldExcludeEmail(
       return true;
     }
 
-    // Wildcard domain (*@domain.com)
     if (normalizedExcluded.startsWith("*@")) {
       const domain = normalizedExcluded.substring(2);
       return extractedEmail.endsWith(`@${domain}`);
     }
 
-    // Contains match (for partial matching)
+    // Contains match
     if (extractedEmail.includes(normalizedExcluded)) {
       return true;
     }
@@ -96,7 +95,6 @@ export const useApplicationStore = create<ApplicationStore>()(
       addApplications: (newApps) =>
         set((state) => {
           const existingIds = new Set(state.applications.map((a) => a.id));
-          // Filter out duplicates and excluded emails
           const deduped = newApps
             .filter((a) => !existingIds.has(a.id))
             .filter((a) => !shouldExcludeEmail(a.email, state.excludedEmails));
@@ -119,12 +117,11 @@ export const useApplicationStore = create<ApplicationStore>()(
         set((state) => {
           const trimmedEmail = email.trim().toLowerCase();
           if (state.excludedEmails.includes(trimmedEmail)) {
-            return state; // No change if already exists
+            return state;
           }
 
           const newExcludedEmails = [...state.excludedEmails, trimmedEmail];
 
-          // Remove applications that match the new exclusion
           const filteredApplications = state.applications.filter(
             (app) => !shouldExcludeEmail(app.email, [trimmedEmail])
           );
@@ -161,11 +158,8 @@ export const useApplicationStore = create<ApplicationStore>()(
     }),
     {
       name: "job-application-storage",
-      // Only persist certain fields to avoid issues with Date objects
       partialize: (state) => ({
         excludedEmails: state.excludedEmails,
-        // Don't persist applications as they contain Date objects
-        // and should be refreshed from API calls
       }),
     }
   )
@@ -178,10 +172,9 @@ export const useUniqueEmails = () => {
 
   return applications
     .map((app) => {
-      // Extract email from "Name <email@domain.com>" format if needed
       const emailMatch = app.email.match(/<(.+)>/);
       return emailMatch ? emailMatch[1].toLowerCase() : app.email.toLowerCase();
     })
-    .filter((email, index, arr) => arr.indexOf(email) === index) // Remove duplicates
-    .filter((email) => !excludedEmails.includes(email)); // Filter out excluded
+    .filter((email, index, arr) => arr.indexOf(email) === index)
+    .filter((email) => !excludedEmails.includes(email));
 };

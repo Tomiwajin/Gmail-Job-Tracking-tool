@@ -38,7 +38,7 @@ export class DataExporter {
 
     // Convert data to CSV format
     const csvRows = [
-      headers.join(","), // Header row
+      headers.join(","),
       ...data.map((row) =>
         [
           `"${row.company}"`,
@@ -72,7 +72,6 @@ export class DataExporter {
   }
 
   static convertToGoogleSheetsFormat(data: ExportData[]): string {
-    // Add additional formatting for better Google Sheets compatibility
     const headers = [
       "Company",
       "Job Role",
@@ -88,7 +87,6 @@ export class DataExporter {
     const csvRows = [
       headers.join(","),
       ...data.map((row) => {
-        // Format status for better readability
         const formattedStatus = row.status
           .split("-")
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -100,10 +98,10 @@ export class DataExporter {
           `"${formattedStatus}"`,
           `"${row.email}"`,
           `"${row.date}"`,
-          `"${row.subject.replace(/"/g, '""')}"`, // Escape quotes in subject
+          `"${row.subject.replace(/"/g, '""')}"`,
           `"${row.appliedDate || ""}"`,
           `"${row.lastUpdate || new Date().toLocaleDateString()}"`,
-          `""`, // Empty notes column for user to fill
+          `""`,
         ].join(",");
       }),
     ];
