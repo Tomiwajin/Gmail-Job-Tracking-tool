@@ -61,15 +61,15 @@ const LandingPage = () => {
               do the heavy lifting.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center relative z-10">
               <Button className="px-8 py-3 bg-gray-200 text-black font-semibold rounded-lg hover:bg-gray-300 hover:-translate-y-0.5 transition-all duration-300 glowEffect">
                 See Demo
               </Button>
               <Button
+                asChild
                 className="px-8 py-3 bg-transparent text-white border border-gray-600 font-semibold rounded-lg hover:bg-gray-800 hover:-translate-y-0.5 transition-all duration-300"
-                onClick={() => (window.location.href = "/updates")}
               >
-                Get Started for Free
+                <Link href="/updates">Get Started for Free</Link>
               </Button>
             </div>
           </div>
