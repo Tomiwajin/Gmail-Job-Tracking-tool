@@ -339,7 +339,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b w-full gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b md:w-full w-screen gap-4">
         <div className="flex items-center space-x-4">
           <SidebarTrigger />
           <h1 className="text-xl font-semibold">Dashboard</h1>

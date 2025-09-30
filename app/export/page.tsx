@@ -234,7 +234,7 @@ export default function ExportPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b w-full">
+      <div className="flex items-center justify-between p-4 border-b w-screen md:w-full">
         <div className="flex items-center space-x-4">
           <SidebarTrigger />
           <h1 className="text-xl font-semibold">Export Data</h1>
