@@ -14,9 +14,9 @@ import {
   Briefcase,
   ChartLine,
   FolderUp,
-  BookOpen,
   UserCircleIcon,
   RefreshCw,
+  CircleQuestionMark,
 } from "lucide-react";
 import { SiGmail } from "react-icons/si";
 import React, { useState, useEffect } from "react";
@@ -40,9 +40,9 @@ const mainMenuItems = [
     icon: FolderUp,
   },
   {
-    title: "Tutorial",
-    url: "/tutorial",
-    icon: BookOpen,
+    title: "FAQ",
+    url: "/faq",
+    icon: CircleQuestionMark,
   },
 ];
 
