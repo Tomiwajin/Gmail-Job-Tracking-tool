@@ -17,6 +17,8 @@ import {
   UserCircleIcon,
   RefreshCw,
   CircleQuestionMark,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { SiGmail } from "react-icons/si";
 import React, { useState, useEffect } from "react";
@@ -49,6 +51,7 @@ const mainMenuItems = [
 const Appsidebar = () => {
   const [isGmailConnected, setIsGmailConnected] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
     const checkGmailAuth = async () => {
@@ -64,6 +67,15 @@ const Appsidebar = () => {
     };
 
     checkGmailAuth();
+
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle(
+        "light",
+        savedTheme === "light"
+      );
+    }
   }, []);
 
   const handleGmailConnect = async () => {
@@ -101,8 +113,20 @@ const Appsidebar = () => {
     }
   };
 
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.toggle("light", newTheme === "light");
+  };
+
   const bottomMenuItems = isGmailConnected
     ? [
+        {
+          title: theme === "dark" ? "Light Mode" : "Dark Mode",
+          action: toggleTheme,
+          icon: theme === "dark" ? Sun : Moon,
+        },
         {
           title: "Switch Account",
           action: handleSwitchAccount,
@@ -120,6 +144,11 @@ const Appsidebar = () => {
         },
       ]
     : [
+        {
+          title: theme === "dark" ? "Light Mode" : "Dark Mode",
+          action: toggleTheme,
+          icon: theme === "dark" ? Sun : Moon,
+        },
         {
           title: "Connect Gmail",
           action: handleGmailConnect,
