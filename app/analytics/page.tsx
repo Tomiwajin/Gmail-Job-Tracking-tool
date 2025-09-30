@@ -16,11 +16,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer } from "@/components/ui/chart";
 import {
   TrendingUp,
   Users,
@@ -44,13 +40,6 @@ const STATUS_COLORS = {
   rejected: "#ef4444",
   withdrawn: "#6b7280",
 } as const;
-
-const CHART_CONFIG = {
-  applications: { label: "Applications", color: "#3b82f6" },
-  interviews: { label: "Interviews", color: "#eab308" },
-  offers: { label: "Offers", color: "#22c55e" },
-  rejections: { label: "Rejections", color: "#ef4444" },
-};
 
 export default function Analytics() {
   const applications = useApplicationStore((state) => state.applications);
