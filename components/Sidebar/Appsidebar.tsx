@@ -196,7 +196,7 @@ const Appsidebar = () => {
         {isGmailConnected && userEmail && (
           <SidebarGroup className="mt-auto">
             <SidebarGroupContent>
-              <div className="mx-3 px-3 py-2 text-xs text-black bg-white rounded-md border border-green-200 group-data-[collapsible=icon]:mx-2 group-data-[collapsible=icon]:px-2">
+              <div className="mx-3 px-3 py-2 text-xs text-black bg-white rounded-md border border-black group-data-[collapsible=icon]:mx-2 group-data-[collapsible=icon]:px-2">
                 <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
                   <span
