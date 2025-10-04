@@ -156,7 +156,8 @@ export default function HomePage() {
         (app) =>
           app.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
           app.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          app.email.toLowerCase().includes(searchTerm.toLowerCase())
+          app.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          app.subject.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 

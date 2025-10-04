@@ -449,7 +449,7 @@ export async function POST(request: NextRequest) {
             "applied",
             "rejected",
             "interview",
-            "next-step",
+            "next-phase",
             "offer",
           ],
         } = await request.json();

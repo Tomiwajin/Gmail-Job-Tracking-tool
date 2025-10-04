@@ -17,7 +17,19 @@ const LandingPage = () => {
             <div className="flex items-center">
               <h1 className="text-xl font-bold gradient-text">CareerSync</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
+              <a
+                href="#features"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#how-it-works"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                How It Works
+              </a>
               <Link
                 href="https://github.com/Tomiwajin/Gmail-Job-Tracking-tool.git"
                 className="text-gray-400 hover:text-white transition-colors"
@@ -79,7 +91,7 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 lg:py-32">
+      <section id="features" className="py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold gradientText mb-4">
@@ -142,7 +154,7 @@ const LandingPage = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 lg:py-32 bg-gray-900/50">
+      <section id="how-it-works" className="py-20 lg:py-32 bg-gray-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold gradientText mb-4">
@@ -189,6 +201,7 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
       {/* Footer */}
       <footer className="border-t mt-auto bg-background">
         <div className="container mx-auto px-4 py-6">
