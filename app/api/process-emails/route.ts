@@ -287,7 +287,7 @@ export async function POST(request: NextRequest) {
         const detailedMessages = await fetchEmailsInBatches(
           gmail,
           allMessages,
-          10
+          100
         );
 
         const emailsForClassification = [];
