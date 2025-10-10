@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
+import { cookies } from "next/headers";
+import { supabase } from "@/lib/supabase";
+import { decrypt } from "@/lib/encryption";
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -9,6 +12,22 @@ const oauth2Client = new google.auth.OAuth2(
 
 export async function GET() {
   try {
+    const cookieStore = await cookies();
+    const userId = cookieStore.get("user_id")?.value;
+
+    // Check if user already has a valid refresh token
+    let hasRefreshToken = false;
+
+    if (userId) {
+      const { data: user } = await supabase
+        .from("users")
+        .select("gmail_refresh_token")
+        .eq("id", userId)
+        .single();
+
+      hasRefreshToken = !!user?.gmail_refresh_token;
+    }
+
     const scopes = [
       "https://www.googleapis.com/auth/gmail.readonly",
       "https://www.googleapis.com/auth/userinfo.email",
@@ -17,7 +36,7 @@ export async function GET() {
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: "offline",
       scope: scopes,
-      prompt: "consent",
+      prompt: hasRefreshToken ? "select_account" : "consent",
       include_granted_scopes: true,
       response_type: "code",
     });
