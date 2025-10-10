@@ -21,9 +21,11 @@ import {
   Sun,
 } from "lucide-react";
 import { SiGmail } from "react-icons/si";
+import { MdOutlineLogout } from "react-icons/md";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useApplicationStore } from "@/lib/useApplicationStore";
 
 const mainMenuItems = [
   {
@@ -49,24 +51,17 @@ const mainMenuItems = [
 ];
 
 const Appsidebar = () => {
-  const [isGmailConnected, setIsGmailConnected] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
+  const isGmailConnected = useApplicationStore(
+    (state) => state.isGmailConnected
+  );
+  const userEmail = useApplicationStore((state) => state.userEmail);
+  const checkAuthStatus = useApplicationStore((state) => state.checkAuthStatus);
+  const logout = useApplicationStore((state) => state.logout);
+
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
-    const checkGmailAuth = async () => {
-      try {
-        const response = await fetch("/api/auth/status");
-        const { isAuthenticated, email } = await response.json();
-        setIsGmailConnected(isAuthenticated);
-        setUserEmail(email || "");
-      } catch (error) {
-        console.error("Failed to check auth status:", error);
-        setIsGmailConnected(false);
-      }
-    };
-
-    checkGmailAuth();
+    checkAuthStatus();
 
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
     if (savedTheme) {
@@ -76,7 +71,7 @@ const Appsidebar = () => {
         savedTheme === "light"
       );
     }
-  }, []);
+  }, [checkAuthStatus]);
 
   const handleGmailConnect = async () => {
     try {
@@ -93,6 +88,7 @@ const Appsidebar = () => {
       const response = await fetch("/api/auth/logout", { method: "POST" });
 
       if (response.ok) {
+        logout();
         const authResponse = await fetch("/api/auth/gmail");
         const { authUrl } = await authResponse.json();
         window.location.href = authUrl;
@@ -105,8 +101,7 @@ const Appsidebar = () => {
   const handleDisconnect = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      setIsGmailConnected(false);
-      setUserEmail("");
+      logout();
       window.location.reload();
     } catch (error) {
       console.error("Failed to disconnect:", error);
@@ -140,7 +135,7 @@ const Appsidebar = () => {
         {
           title: "Disconnect",
           action: handleDisconnect,
-          icon: SiGmail,
+          icon: MdOutlineLogout,
         },
       ]
     : [

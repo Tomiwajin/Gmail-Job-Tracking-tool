@@ -114,12 +114,19 @@ const datePresets: DatePreset[] = [
 ];
 
 export default function HomePage() {
+  // Application store
   const updates = useApplicationStore((state) => state.applications);
   const addApplications = useApplicationStore((state) => state.addApplications);
   const startDate = useApplicationStore((state) => state.startDate);
   const endDate = useApplicationStore((state) => state.endDate);
   const setStartDate = useApplicationStore((state) => state.setStartDate);
   const setEndDate = useApplicationStore((state) => state.setEndDate);
+
+  // Auth store
+  const isGmailConnected = useApplicationStore(
+    (state) => state.isGmailConnected
+  );
+  const checkAuthStatus = useApplicationStore((state) => state.checkAuthStatus);
 
   const { excludedEmails } = useExcludedEmails();
 
@@ -129,7 +136,6 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isGmailConnected, setIsGmailConnected] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -200,6 +206,11 @@ export default function HomePage() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Check auth status on mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
 
   const handleProcessEmails = async () => {
     if (!startDate || !endDate) {
@@ -313,20 +324,6 @@ export default function HomePage() {
       console.error("Failed to initiate Gmail login:", error);
     }
   };
-
-  useEffect(() => {
-    const checkGmailAuth = async () => {
-      try {
-        const response = await fetch("/api/auth/status");
-        const { isAuthenticated } = await response.json();
-        setIsGmailConnected(isAuthenticated);
-      } catch (error) {
-        console.error("Failed to check auth status:", error);
-      }
-    };
-
-    checkGmailAuth();
-  }, []);
 
   const getProcessingButtonText = () => {
     if (!isProcessing) return "Process Emails";

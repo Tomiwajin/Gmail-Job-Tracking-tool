@@ -24,6 +24,8 @@ interface ApplicationStore {
   startDate: Date | undefined;
   endDate: Date | undefined;
   excludedEmails: string[];
+  isGmailConnected: boolean;
+  userEmail: string;
   setApplications: (apps: JobApplication[]) => void;
   addApplications: (apps: JobApplication[]) => void;
   removeApplications: (ids: string[]) => void;
@@ -37,6 +39,9 @@ interface ApplicationStore {
   removeExcludedEmail: (email: string) => void;
   setExcludedEmails: (emails: string[]) => void;
   clearExcludedEmails: () => void;
+  setAuthStatus: (isAuthenticated: boolean, email: string) => void;
+  checkAuthStatus: () => Promise<void>;
+  logout: () => void;
 }
 
 // Helper function to check if email should be excluded
@@ -89,6 +94,8 @@ export const useApplicationStore = create<ApplicationStore>()(
       startDate: undefined,
       endDate: undefined,
       excludedEmails: [],
+      isGmailConnected: false,
+      userEmail: "",
 
       setApplications: (apps) => set({ applications: apps }),
 
@@ -155,11 +162,29 @@ export const useApplicationStore = create<ApplicationStore>()(
         }),
 
       clearExcludedEmails: () => set({ excludedEmails: [] }),
+
+      // Auth methods
+      setAuthStatus: (isAuthenticated, email) =>
+        set({ isGmailConnected: isAuthenticated, userEmail: email }),
+
+      checkAuthStatus: async () => {
+        try {
+          const response = await fetch("/api/auth/status");
+          const { isAuthenticated, email } = await response.json();
+          set({ isGmailConnected: isAuthenticated, userEmail: email || "" });
+        } catch (error) {
+          console.error("Failed to check auth status:", error);
+          set({ isGmailConnected: false, userEmail: "" });
+        }
+      },
+
+      logout: () => set({ isGmailConnected: false, userEmail: "" }),
     }),
     {
       name: "job-application-storage",
       partialize: (state) => ({
         excludedEmails: state.excludedEmails,
+        // Don't persist auth state - it should be checked fresh each session
       }),
     }
   )
