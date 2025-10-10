@@ -75,7 +75,7 @@ const LandingPage = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center relative z-10">
               <Button className="px-8 py-3 bg-gray-200 text-black font-semibold rounded-lg hover:bg-gray-300 hover:-translate-y-0.5 transition-all duration-300 glowEffect">
-                See Demo
+                Watch Demo
               </Button>
               <Button
                 asChild
