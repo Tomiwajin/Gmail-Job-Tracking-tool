@@ -154,15 +154,18 @@ const Appsidebar = () => {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]">
-        <div className="flex items-center gap-2 group-data-[collapsible=icon]:gap-0">
+        <div className="flex items-center gap-2 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:mt-3.5 mt-1 ">
           <div className="flex items-center justify-center">
-            <Image
-              src="/favicon.ico"
-              alt="App favicon"
-              className="h-6 w-6 rounded-sm"
-              width={24}
-              height={24}
-            />
+            <Link href="/">
+              {" "}
+              <Image
+                src="/favicon.ico"
+                alt="App favicon"
+                className="h-6 w-6 rounded-sm"
+                width={24}
+                height={24}
+              />
+            </Link>
           </div>
           <span className="text-xl font-extrabold group-data-[collapsible=icon]:hidden">
             CareerSync

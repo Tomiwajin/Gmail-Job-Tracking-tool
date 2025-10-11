@@ -2,10 +2,82 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Brain, ChartLine, FolderUp } from "lucide-react";
+import {
+  Brain,
+  ChartLine,
+  FolderUp,
+  Menu,
+  Rocket,
+  SettingsIcon,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShootingStars } from "@/components/ui/shooting-stars";
 import { StarsBackground } from "@/components/ui/stars-background";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+
+const MobileSidebar = () => {
+  return (
+    <div className="sm:hidden">
+      <Sheet>
+        <SheetTrigger asChild>
+          <button className="p-2 rounded-md hover:bg-gray-800">
+            <Menu className="w-6 h-6 text-white" />
+          </button>
+        </SheetTrigger>
+
+        <SheetContent
+          side="left"
+          className="bg-black text-white border-gray-800"
+        >
+          <SheetHeader>
+            <h2 className="text-lg font-bold mb-4">CareerSync</h2>
+          </SheetHeader>
+
+          <nav className="flex flex-col gap-6 mt-6 p-4">
+            <Link
+              href="#features"
+              className="flex items-center gap-3 hover:text-gray-300 transition-colors"
+            >
+              <Sparkles className="w-5 h-5" />
+              <span>Features</span>
+            </Link>
+
+            <Link
+              href="#how-it-works"
+              className="flex items-center gap-3 hover:text-gray-300 transition-colors"
+            >
+              <SettingsIcon className="w-5 h-5" />
+              <span>How It Works</span>
+            </Link>
+
+            <Link
+              href="https://github.com/Tomiwajin/Gmail-Job-Tracking-tool.git"
+              target="_blank"
+              className="flex items-center gap-3 hover:text-gray-300 transition-colors"
+            >
+              <Brain className="w-5 h-5" />
+              <span>GitHub</span>
+            </Link>
+
+            <Link
+              href="/updates"
+              className="flex items-center gap-3 hover:text-gray-300 transition-colors"
+            >
+              <Rocket className="w-5 h-5" />
+              <span>Get Started</span>
+            </Link>
+          </nav>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+};
 
 const LandingPage = () => {
   return (
@@ -14,10 +86,10 @@ const LandingPage = () => {
       <nav className="border-b border-gray-800 bg-black/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold gradient-text">CareerSync</h1>
-            </div>
-            <div className="flex items-center space-x-6">
+            <h1 className="text-xl font-bold gradient-text">CareerSync</h1>
+
+            {/* Desktop Links */}
+            <div className="hidden sm:flex items-center space-x-6">
               <a
                 href="#features"
                 className="text-gray-400 hover:text-white transition-colors"
@@ -38,6 +110,9 @@ const LandingPage = () => {
                 GitHub
               </Link>
             </div>
+
+            {/* Mobile Sidebar */}
+            <MobileSidebar />
           </div>
         </div>
       </nav>

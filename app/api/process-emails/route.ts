@@ -57,7 +57,7 @@ async function classifyEmailsBatch(
   progressCallback?: (current: number, total: number) => void
 ): Promise<Map<string, ClassificationResult>> {
   const results = new Map<string, ClassificationResult>();
-  const maxBatchSize = 400;
+  const maxBatchSize = 100;
   const spaceUrl = process.env.HUGGINGFACE_SPACE_URL;
   if (!spaceUrl) throw new Error("HuggingFace Space URL not configured");
 
@@ -97,7 +97,7 @@ async function extractJobInfoBatch(
   progressCallback?: (current: number, total: number) => void
 ): Promise<Map<string, ExtractionResult>> {
   const results = new Map<string, ExtractionResult>();
-  const maxBatchSize = 400;
+  const maxBatchSize = 100;
   const spaceUrl = process.env.HUGGINGFACE_SPACE_URL;
   if (!spaceUrl) throw new Error("HuggingFace Space URL not configured");
 
